@@ -7,7 +7,7 @@ This project is very much so build by me for me. Right now it doesn't support an
 
 Nonetheless, if you want to use it or build upon it feel free to test it. You will need a MySQL instance as a backend service.
 
-##Basic start
+## Basic start
 ```
 ./harmolytics config database --db-host 127.0.0.1 --db-port 3306 --db-user <user>
 ./harmolytics sql init
@@ -22,7 +22,7 @@ Nonetheless, if you want to use it or build upon it feel free to test it. You wi
 ```
 If nothing ended up on fire by now you should have a database full of all kinds of data. For a better overview there are views however I recommend using raw data until displaying to avoid precision errors.
 
-##Known problems
+## Known problems
 Right now compiling this "as is" is not possible because one dependency is private.If you want to just remove my logging module.
 Give me a moment to fix that module up a bit, so it is presentable. When that is done it goes public.
 
@@ -30,7 +30,7 @@ Other than that there isn't a lot of input validation, so you could easily break
 There is also an SQL injection vulnerability in the profile parameter. 
 Password safety isn't top-notch either. Again this is mostly made by myself for myself.
 
-##Todo
+## Todo
 Quite a bit I still want to do with this. No guarantee any of this will ever make it.
 
 - Historical price data
@@ -41,5 +41,5 @@ Quite a bit I still want to do with this. No guarantee any of this will ever mak
 - CSV export capabilities and maybe even remove the need for a database
 - Documentation, better help commands, input validation and stuff
 
-##Contribution
+## Contribution
 As said above this is more of a personal project so no need for anyone else to deal with this. However, if you have feedback or improvement ideas feel free to contact me over this repo or on harmony discord @Markus#8518
