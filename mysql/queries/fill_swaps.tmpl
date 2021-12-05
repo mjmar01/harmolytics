@@ -1,0 +1,16 @@
+{{range .Swaps}}
+REPLACE INTO harmolytics_{{$.Profile}}.swaps (
+    hash,
+    inputToken,
+    outputToken,
+    inputAmount,
+    outputAmount
+)
+VALUES (
+    '{{.TxHash}}',
+    '{{.InToken.Address.OneAddress}}',
+    '{{.OutToken.Address.OneAddress}}',
+    {{.InAmount}},
+    {{.OutAmount}}
+);
+{{end}}

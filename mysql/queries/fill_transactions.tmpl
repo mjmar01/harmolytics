@@ -1,0 +1,48 @@
+{{range $i, $t := .Transactions}}
+REPLACE INTO harmolytics_{{$.Profile}}.transactions (
+    hash,
+    sender,
+    receiver,
+    input,
+    method,
+    unixtime,
+    gasAmount,
+    gasPrice,
+    value,
+    shardID,
+    toShardID,
+    BlockNum
+)
+VALUES (
+    '{{.TxHash}}',
+     '{{.Sender.OneAddress}}',
+     '{{.Receiver.OneAddress}}',
+     '{{.Input}}',
+     '{{.Method.Signature}}',
+     {{.Timestamp}},
+     {{.GasAmount}},
+     {{.GasPrice}},
+     {{.Value}},
+     {{.ShardID}},
+     {{.ToShardID}},
+     {{.BlockNum}}
+);
+
+{{range .Logs}}
+{{$first := true}}
+REPLACE INTO harmolytics_{{$.Profile}}.transaction_logs (
+    hash,
+    logIndex,
+    address,
+    data,
+    topics
+)
+VALUES (
+    '{{$t.TxHash}}',
+    '{{.LogIndex}}',
+    '{{.Address.OneAddress}}',
+    '{{.Data}}',
+    '{{- range .Topics}}{{if $first}}{{$first = false}}{{else}}:{{end}}{{.}}{{- end}}'
+);
+{{end}}
+{{end}}

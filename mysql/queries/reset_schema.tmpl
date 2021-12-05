@@ -1,0 +1,129 @@
+drop schema if exists harmolytics_{{.}};
+create schema harmolytics_{{.}};
+drop schema if exists harmolytics_default;
+create schema harmolytics_default;
+
+create table harmolytics_{{.}}.transactions
+(
+    hash char(66) not null,
+    sender char(42) not null,
+    receiver char(42) not null,
+    input text null,
+    method varchar(10) null,
+    unixtime decimal(65,0) not null,
+    blockNum decimal(65,0) not null,
+    gasAmount decimal(65,0) not null,
+    gasPrice decimal(65,0) not null,
+    value decimal(65,0) null,
+    shardID int null,
+    toShardID int null,
+    senderComment text null,
+    receiverComment text null,
+    methodComment text null,
+    constraint transactions_pk
+            primary key (hash)
+);
+
+create table harmolytics_{{.}}.tokens
+(
+    address char(42) not null,
+    symbol varchar(50) null,
+    name varchar(100) null,
+    decimals int null,
+    constraint tokens_pk
+            primary key (address)
+);
+
+create table harmolytics_{{.}}.contracts
+(
+	address char(42) not null,
+	possibleType varchar(50) null,
+	ownerComment varchar(50) null,
+	constraint contracts_pk
+    		primary key (address)
+);
+
+create table harmolytics_{{.}}.transaction_logs
+(
+	hash char(66) not null,
+	logIndex int not null,
+	data text null,
+	topics text null,
+	address char(42),
+	constraint transaction_logs_pk
+		primary key (hash, logIndex)
+);
+
+create table harmolytics_{{.}}.swaps
+(
+	hash char(66) not null,
+	inputToken char(42) null,
+	outputToken char(42) null,
+	inputAmount decimal(65) null,
+	outputAmount decimal(65) null,
+	constraint swaps_pk
+		primary key (hash)
+);
+
+create table harmolytics_{{.}}.token_transfers
+(
+	id int auto_increment,
+	txHash char(66) not null,
+	token char(42) not null,
+	sender char(42) null,
+	receiver char(42) not null,
+	amount decimal(65) not null,
+	constraint token_transfers_pk
+		primary key (id)
+);
+
+
+
+create table harmolytics_default.addresses
+(
+    address char(42) not null,
+    type varchar(50) null,
+    name varchar(50) null,
+    constraint methods_pk
+    		primary key (address)
+);
+
+create table harmolytics_default.methods
+(
+	signature char(10) not null,
+	name varchar(100) not null,
+	parameters text null,
+	constraint methods_pk
+    		primary key (signature)
+);
+
+create view harmolytics_{{.}}.hr_swaps as
+select `harmolytics_{{.}}`.`swaps`.`hash`                                      AS `hash`,
+       (`harmolytics_{{.}}`.`swaps`.`inputAmount` / pow(10, `t1`.`decimals`))  AS `inputAmount`,
+       `t1`.`symbol`                                                         AS `inputToken`,
+       (`harmolytics_{{.}}`.`swaps`.`outputAmount` / pow(10, `t2`.`decimals`)) AS `outputAmount`,
+       `t2`.`symbol`                                                         AS `outputToken`,
+       `tx`.`blockNum`                                                       AS `blockNum`
+from (((`harmolytics_{{.}}`.`swaps` join `harmolytics_{{.}}`.`tokens` `t1`) join `harmolytics_{{.}}`.`tokens` `t2`)
+         join `harmolytics_{{.}}`.`transactions` `tx`)
+where ((`harmolytics_{{.}}`.`swaps`.`inputToken` = `t1`.`address`) and
+       (`harmolytics_{{.}}`.`swaps`.`outputToken` = `t2`.`address`) and (`harmolytics_{{.}}`.`swaps`.`hash` = `tx`.`hash`))
+order by `tx`.`blockNum`;
+
+
+       
+create view harmolytics_{{.}}.hr_token_transfers as
+select `harmolytics_{{.}}`.`token_transfers`.`txHash`                                                    AS `txHash`,
+       `harmolytics_{{.}}`.`token_transfers`.`sender`                                                    AS `sender`,
+       `harmolytics_{{.}}`.`token_transfers`.`receiver`                                                  AS `receiver`,
+       `harmolytics_{{.}}`.`tokens`.`symbol`                                                             AS `token`,
+       (`harmolytics_{{.}}`.`token_transfers`.`amount` / pow(10, `harmolytics_{{.}}`.`tokens`.`decimals`)) AS `amount`,
+       `harmolytics_{{.}}`.`transactions`.`blockNum`                                                     AS `blockNum`
+from ((`harmolytics_{{.}}`.`token_transfers` join `harmolytics_{{.}}`.`tokens`)
+         join `harmolytics_{{.}}`.`transactions`)
+where ((`harmolytics_{{.}}`.`token_transfers`.`token` = `harmolytics_{{.}}`.`tokens`.`address`) and
+       (`harmolytics_{{.}}`.`token_transfers`.`txHash` = `harmolytics_{{.}}`.`transactions`.`hash`))
+order by `transactions`.`blockNum`;
+
+
+

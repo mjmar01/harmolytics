@@ -1,0 +1,16 @@
+{{range .Transfers}}
+REPLACE INTO harmolytics_{{$.Profile}}.token_transfers (
+    txHash,
+    token,
+    sender,
+    receiver,
+    amount
+)
+VALUES (
+    '{{.TxHash}}',
+    '{{.Token.Address.OneAddress}}',
+    '{{.Sender.OneAddress}}',
+    '{{.Receiver.OneAddress}}',
+    '{{.Amount}}'
+);
+{{end}}

@@ -1,0 +1,14 @@
+{{range .Tokens}}
+REPLACE INTO harmolytics_{{$.Profile}}.tokens (
+    address,
+    symbol,
+    name,
+    decimals
+)
+VALUES (
+    '{{.Address.OneAddress}}',
+    '{{.Symbol}}',
+    '{{.Name}}',
+    {{.Decimals}}
+);
+{{end}}
