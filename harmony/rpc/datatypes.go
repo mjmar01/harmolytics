@@ -26,6 +26,10 @@ type transactionJson struct {
 	BlockNum  uint64      `json:"blockNumber"`
 }
 
+type wrappedTransactionJson struct {
+	Result transactionJson `json:"result"`
+}
+
 type transactionHistoryJson struct {
 	Result struct {
 		Transactions []transactionJson `json:"transactions"`

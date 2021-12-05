@@ -24,11 +24,12 @@ func GetTransaction(hash string) (tx harmony.Transaction, err error) {
 		return
 	}
 	// read result
-	var txJson transactionJson
-	err = json.Unmarshal(result, &txJson)
+	var wTxJson wrappedTransactionJson
+	err = json.Unmarshal(result, &wTxJson)
 	if err != nil {
 		return harmony.Transaction{}, errors.Wrap(err, 0)
 	}
+	txJson := wTxJson.Result
 	// Convert transactionJson to harmony.Transaction
 	sender, err := address.New(txJson.Sender)
 	if err != nil {

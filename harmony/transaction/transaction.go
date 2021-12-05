@@ -75,23 +75,23 @@ func GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Transaction, e
 
 func GetFullTransaction(hash string) (tx harmony.Transaction, err error) {
 	// Get basic transaction information
-	transaction, err := rpc.GetTransaction(hash)
+	tx, err = rpc.GetTransaction(hash)
 	if err != nil {
 		return
 	}
 	// Get transaction status
-	txStatus, err := rpc.GetTransactionStatus(transaction.TxHash)
+	txStatus, err := rpc.GetTransactionStatus(tx.TxHash)
 	// Return an empty Transaction if it failed
 	if txStatus == harmony.TxFailed {
 		tx = harmony.Transaction{}
 		return
 	}
 	// Add transaction logs
-	logs, err := rpc.GetTransactionLogs(transaction.TxHash)
+	logs, err := rpc.GetTransactionLogs(tx.TxHash)
 	if err != nil {
 		return
 	}
-	transaction.Logs = logs
+	tx.Logs = logs
 	// TODO Retrieve method information
 	// You could retrieve method information here, but depending on how this function is used it could be wasteful.
 	// Again either implement caching or ignore for now.
