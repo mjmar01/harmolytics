@@ -23,10 +23,7 @@ Nonetheless, if you want to use it or build upon it feel free to test it. You wi
 If nothing ended up on fire by now you should have a database full of all kinds of data. For a better overview there are views however I recommend using raw data until displaying to avoid precision errors.
 
 ## Known problems
-Right now compiling this "as is" is not possible because one dependency is private.If you want to just remove my logging module.
-Give me a moment to fix that module up a bit, so it is presentable. When that is done it goes public.
-
-Other than that there isn't a lot of input validation, so you could easily break it if you wanted to.
+There isn't a lot of input validation, so you could easily break it if you wanted to.
 There is also an SQL injection vulnerability in the profile parameter. 
 Password safety isn't top-notch either. Again this is mostly made by myself for myself.
 
