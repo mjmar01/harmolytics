@@ -68,8 +68,9 @@ func GetTransaction(hash string) (tx harmony.Transaction, err error) {
 	return
 }
 
-// GetTransactionLogs uses the getTransactionReceipt endpoint to get all logs for a given transaction hash.
-func GetTransactionLogs(hash string) (logs []harmony.TransactionLog, err error) {
+// GetTransactionReceipt uses the getTransactionReceipt endpoint to get all logs for a given transaction hash and its status.
+// (Status: 0 -> not OK, 1 -> OK)
+func GetTransactionReceipt(hash string) (status int, logs []harmony.TransactionLog, err error) {
 	// Get transaction receipt
 	params := []interface{}{hash}
 	result, err := rawSafeRpcCall(transactionReceipt, params)
@@ -80,18 +81,19 @@ func GetTransactionLogs(hash string) (logs []harmony.TransactionLog, err error) 
 	var txReceipt transactionReceiptJson
 	err = json.Unmarshal(result, &txReceipt)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return 0, nil, errors.Wrap(err, 0)
 	}
+	status = txReceipt.Result.Status
 	// Convert transactionReceiptJson to []harmony.TransactionLog
 	for _, l := range txReceipt.Result.Logs {
 		// Convert data formats
 		index, err := hexutil.DecodeUint64(l.LogIndex)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return 0, nil, errors.Wrap(err, 0)
 		}
 		addr, err := address.New(l.Address)
 		if err != nil {
-			return nil, err
+			return 0, nil, err
 		}
 		// Add log
 		logs = append(logs, harmony.TransactionLog{
@@ -102,24 +104,5 @@ func GetTransactionLogs(hash string) (logs []harmony.TransactionLog, err error) 
 			Data:     l.Data,
 		})
 	}
-	return
-}
-
-// GetTransactionStatus uses the getTransactionReceipt endpoint to get the status for a given transaction hash.
-// (0 -> not OK, 1 -> OK)
-func GetTransactionStatus(hash string) (s int, err error) {
-	// Get transaction receipt
-	params := []interface{}{hash}
-	result, err := rawSafeRpcCall(transactionReceipt, params)
-	if err != nil {
-		return
-	}
-	// Read result and return status
-	var txReceipt transactionReceiptJson
-	err = json.Unmarshal(result, &txReceipt)
-	if err != nil {
-		return 0, errors.Wrap(err, 0)
-	}
-	s = txReceipt.Result.Status
 	return
 }

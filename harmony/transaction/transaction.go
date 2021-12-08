@@ -28,11 +28,11 @@ func GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Transaction, e
 		ch := make(chan harmony.Transaction, len(transactions))
 		for _, transaction := range transactions {
 			go func(tx harmony.Transaction) {
-				// Empty the TxHash for Failed transactions and skip this transaction
-				txStatus, err := rpc.GetTransactionStatus(tx.TxHash)
+				// Retrieve transaction receipt
+				txStatus, logs, err := rpc.GetTransactionReceipt(tx.TxHash)
 				if err != nil {
 					// TODO thread safe logging in go routines
-					fmt.Printf("Error occured while trying to get TransactionStatus. %s. %s", err.Error(), tx.TxHash)
+					fmt.Printf("Error occured while trying to get transaction receipt. %s. %s\n", err.Error(), tx.TxHash)
 					ch <- harmony.Transaction{}
 					wg.Done()
 					return
@@ -43,15 +43,7 @@ func GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Transaction, e
 					wg.Done()
 					return
 				}
-				// Retrieve transaction logs
-				logs, err := rpc.GetTransactionLogs(tx.TxHash)
-				if err != nil {
-					// TODO thread safe logging in go routines
-					fmt.Printf("Error occured while trying to get TransactionLogs. %s. %s", err.Error(), tx.TxHash)
-					ch <- harmony.Transaction{}
-					wg.Done()
-					return
-				}
+
 				tx.Logs = logs
 				// TODO Retrieve method information
 				// Proper way would be to get method info here but this is also wasteful.
@@ -79,16 +71,13 @@ func GetFullTransaction(hash string) (tx harmony.Transaction, err error) {
 	if err != nil {
 		return
 	}
-	// Get transaction status
-	txStatus, err := rpc.GetTransactionStatus(tx.TxHash)
-	// Return an empty Transaction if it failed
-	if txStatus == harmony.TxFailed {
-		tx = harmony.Transaction{}
+	// Load transaction receipt
+	txStatus, logs, err := rpc.GetTransactionReceipt(tx.TxHash)
+	if err != nil {
 		return
 	}
-	// Add transaction logs
-	logs, err := rpc.GetTransactionLogs(tx.TxHash)
-	if err != nil {
+	if txStatus == harmony.TxFailed {
+		tx = harmony.Transaction{}
 		return
 	}
 	tx.Logs = logs
