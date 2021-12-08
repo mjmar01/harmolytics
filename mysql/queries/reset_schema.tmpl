@@ -17,9 +17,6 @@ create table harmolytics_{{.}}.transactions
     value decimal(65,0) null,
     shardID int null,
     toShardID int null,
-    senderComment text null,
-    receiverComment text null,
-    methodComment text null,
     constraint transactions_pk
             primary key (hash)
 );
@@ -32,15 +29,6 @@ create table harmolytics_{{.}}.tokens
     decimals int null,
     constraint tokens_pk
             primary key (address)
-);
-
-create table harmolytics_{{.}}.contracts
-(
-	address char(42) not null,
-	possibleType varchar(50) null,
-	ownerComment varchar(50) null,
-	constraint contracts_pk
-    		primary key (address)
 );
 
 create table harmolytics_{{.}}.transaction_logs
@@ -76,8 +64,6 @@ create table harmolytics_{{.}}.token_transfers
 	constraint token_transfers_pk
 		primary key (id)
 );
-
-
 
 create table harmolytics_default.addresses
 (
