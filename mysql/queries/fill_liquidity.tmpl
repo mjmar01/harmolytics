@@ -1,0 +1,22 @@
+{{range .Liquidity}}
+REPLACE INTO harmolytics_{{$.Profile}}.liquidity (
+    hash,
+    tokenA,
+    amountA,
+    tokenB,
+    amountB,
+    lpToken,
+    lpAmount,
+    direction
+)
+VALUES (
+    '{{.TxHash}}',
+    '{{.TokenA.Address.OneAddress}}',
+    {{.AmountA}},
+    '{{.TokenB.Address.OneAddress}}',
+    {{.AmountB}},
+    '{{.LpToken.Address.OneAddress}}',
+    {{.LpAmount}},
+    '{{.Direction}}'
+);
+{{end}}

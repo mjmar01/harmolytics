@@ -85,4 +85,20 @@ type Swap struct {
 	OutAmount *big.Int
 }
 
+const (
+	AddLiquidity    = "add"
+	RemoveLiquidity = "rem"
+)
+
+type LiquidityAction struct {
+	TxHash    string
+	TokenA    Token
+	TokenB    Token
+	AmountA   *big.Int
+	AmountB   *big.Int
+	LpToken   Token
+	LpAmount  *big.Int
+	Direction string
+}
+
 //</editor-fold>

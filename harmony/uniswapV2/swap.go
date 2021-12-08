@@ -1,4 +1,4 @@
-package swap
+package uniswapV2
 
 import (
 	hexEncoding "encoding/hex"

@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 	"harmolytics/harmony"
 	"harmolytics/harmony/rpc"
-	"harmolytics/harmony/swap"
 	"harmolytics/harmony/transaction"
+	"harmolytics/harmony/uniswapV2"
 	"harmolytics/mysql"
 )
 
@@ -42,13 +42,38 @@ var decodeSwapsCmd = &cobra.Command{
 		log.Info(fmt.Sprintf("Found %d swaps", len(txs)))
 		var swaps []harmony.Swap
 		for _, tx := range txs {
-			s, err := swap.DecodeSwap(tx)
+			s, err := uniswapV2.DecodeSwap(tx)
 			log.CheckErr(err, log.FatalLevel)
 			swaps = append(swaps, s)
 		}
 		log.Done()
 		log.Task("Saving swaps to database", log.InfoLevel)
 		err = mysql.SetSwaps(swaps)
+		log.CheckErr(err, log.FatalLevel)
+		log.Done()
+	},
+}
+
+var decodeLiquidityCmd = &cobra.Command{
+	Use:   "liquidity",
+	Short: "Analyzes uniswap LP interactions",
+	Run: func(cmd *cobra.Command, args []string) {
+		log.Task("Analyzing liquidity", log.InfoLevel)
+		adds, err := mysql.GetTransactionsByMethodName("addLiquidity%")
+		log.CheckErr(err, log.FatalLevel)
+		rems, err := mysql.GetTransactionsByMethodName("removeLiquidity%")
+		log.CheckErr(err, log.FatalLevel)
+		txs := append(adds, rems...)
+		log.Info(fmt.Sprintf("Found %d LP interactions", len(txs)))
+		var lpActions []harmony.LiquidityAction
+		for _, tx := range txs {
+			lpAction, err := uniswapV2.DecodeLiquidity(tx)
+			log.CheckErr(err, log.FatalLevel)
+			lpActions = append(lpActions, lpAction)
+		}
+		log.Done()
+		log.Task("Saving liquidity actions to database", log.InfoLevel)
+		err = mysql.SetLiquidity(lpActions)
 		log.CheckErr(err, log.FatalLevel)
 		log.Done()
 	},
@@ -79,6 +104,7 @@ var decodeTransfersCmd = &cobra.Command{
 
 func init() {
 	decodeCmd.AddCommand(decodeSwapsCmd)
+	decodeCmd.AddCommand(decodeLiquidityCmd)
 	decodeCmd.AddCommand(decodeTransfersCmd)
 	decodeCmd.PersistentFlags().StringVar(&config.DB.Host, HostParam, "127.0.0.1", "")
 	decodeCmd.PersistentFlags().StringVar(&config.DB.Port, PortParam, "3306", "")

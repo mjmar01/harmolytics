@@ -53,6 +53,20 @@ create table harmolytics_{{.}}.swaps
 		primary key (hash)
 );
 
+create table harmolytics_{{.}}.liquidity
+(
+	hash char(66) not null,
+	tokenA char(42) null,
+	amountA decimal(65) null,
+	tokenB char(42) null,
+	amountB decimal(65) null,
+	lpToken char(42) null,
+	lpAmount decimal(65) null,
+	direction char(3),
+	constraint swaps_pk
+		primary key (hash)
+);
+
 create table harmolytics_{{.}}.token_transfers
 (
 	id int auto_increment,

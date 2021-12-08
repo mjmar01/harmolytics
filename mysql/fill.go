@@ -20,6 +20,9 @@ var methodsQ string
 //go:embed queries/fill_swaps.tmpl
 var swapsQ string
 
+//go:embed queries/fill_liquidity.tmpl
+var liquidityQ string
+
 //go:embed queries/fill_tokenTransfers.tmpl
 var tokenTransfersQ string
 
@@ -91,6 +94,27 @@ func SetSwaps(swaps []harmony.Swap) (err error) {
 	}
 	var buf bytes.Buffer
 	t, err := template.New("fillSwaps").Parse(swapsQ)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = t.Execute(&buf, data)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = RunTemplate(buf.String())
+	return
+}
+
+func SetLiquidity(liquidityActions []harmony.LiquidityAction) (err error) {
+	data := struct {
+		Profile   string
+		Liquidity []harmony.LiquidityAction
+	}{
+		Profile:   profile,
+		Liquidity: liquidityActions,
+	}
+	var buf bytes.Buffer
+	t, err := template.New("fillLiquidity").Parse(liquidityQ)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
