@@ -85,6 +85,12 @@ type Swap struct {
 	OutAmount *big.Int
 }
 
+type LiquidityPool struct {
+	TokenA  Token
+	TokenB  Token
+	LpToken Token
+}
+
 const (
 	AddLiquidity    = "add"
 	RemoveLiquidity = "rem"
@@ -92,13 +98,18 @@ const (
 
 type LiquidityAction struct {
 	TxHash    string
-	TokenA    Token
-	TokenB    Token
+	LP        LiquidityPool
 	AmountA   *big.Int
 	AmountB   *big.Int
-	LpToken   Token
-	LpAmount  *big.Int
+	AmountLP  *big.Int
 	Direction string
+}
+
+type Claim struct {
+	TxHash string
+	Token  Token
+	Amount *big.Int
+	PoolId int
 }
 
 //</editor-fold>

@@ -1,5 +1,5 @@
-{{range .Tokens}}
-REPLACE INTO harmolytics_{{$.Profile}}.tokens (
+{{range .}}
+REPLACE INTO harmolytics_default.tokens (
     address,
     symbol,
     name,

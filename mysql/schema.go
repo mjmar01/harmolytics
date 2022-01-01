@@ -3,12 +3,13 @@ package mysql
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"github.com/go-errors/errors"
 	"text/template"
 )
 
-//go:embed queries/reset_schema.tmpl
-var resetSchemaQ string
+//go:embed queries/init_schema.tmpl
+var initSchemaQ string
 
 //go:embed queries/fill_known_addresses.tmpl
 var knownAddressesQ string
@@ -23,9 +24,15 @@ type KnownInfo struct {
 	Addrs []Addr
 }
 
-func InitSchema() (err error) {
+func InitSchema(overwrite bool) (err error) {
+	if overwrite {
+		err = RunQuery(fmt.Sprintf("drop schema if exists harmolytics_profile_%s", profile))
+		if err != nil {
+			return
+		}
+	}
 	var buf bytes.Buffer
-	t, err := template.New("resetSchema").Parse(resetSchemaQ)
+	t, err := template.New("initSchema").Parse(initSchemaQ)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	transferQuery = "SELECT DISTINCT address FROM harmolytics_%s.transaction_logs WHERE topics LIKE '%s%%'"
-	methodsQuery  = "SELECT DISTINCT method FROM harmolytics_%s.transactions ORDER BY method ASC"
+	transferQuery = "SELECT DISTINCT address FROM harmolytics_profile_%s.transaction_logs WHERE topics LIKE '%s%%'"
+	methodsQuery  = "SELECT DISTINCT method_signature FROM harmolytics_profile_%s.transactions ORDER BY method_signature ASC"
 )
 
 const (
@@ -32,15 +32,15 @@ var loadCmd = &cobra.Command{
 	Short: "Set of commands to load information from the harmony blockchain",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		err := initViper()
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		err = initFlags(cmd)
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		err = initConfigVars()
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		log.SetLogLevel(config.LogLevel)
-		rpc.SetRpcUrl(config.RpcUrl)
+		rpc.SetRpcUrl(config.RpcUrl, config.HistoricRpcUrl)
 		_, err = mysql.ConnectDatabase(config.DB.User, config.DB.Password, config.DB.Host, config.DB.Port, config.DB.Profile, cryptKey)
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
@@ -53,21 +53,21 @@ var loadTransactionsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if address != "" {
 			w, err := addressPkg.New(address)
-			log.CheckErr(err, log.FatalLevel)
+			log.CheckErr(err, log.PanicLevel)
 			txs, err := transaction.GetTransactionsByWallet(w)
-			log.CheckErr(err, log.FatalLevel)
+			log.CheckErr(err, log.PanicLevel)
 			err = mysql.SetTransactions(txs)
-			log.CheckErr(err, log.FatalLevel)
+			log.CheckErr(err, log.PanicLevel)
 		}
 		if len(args) > 0 {
 			var txs []harmony.Transaction
 			for _, arg := range args {
 				tx, err := transaction.GetFullTransaction(arg)
-				log.CheckErr(err, log.FatalLevel)
+				log.CheckErr(err, log.PanicLevel)
 				txs = append(txs, tx)
 			}
 			err := mysql.SetTransactions(txs)
-			log.CheckErr(err, log.FatalLevel)
+			log.CheckErr(err, log.PanicLevel)
 		}
 	},
 }
@@ -78,7 +78,7 @@ var loadTokensCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Task("Loading token information", log.InfoLevel)
 		addrs, err := mysql.GetStringsByQuery(fmt.Sprintf(transferQuery, config.DB.Profile, transferEvent))
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		var tokens []harmony.Token
 		wg := sync.WaitGroup{}
 		wg.Add(len(addrs))
@@ -86,10 +86,10 @@ var loadTokensCmd = &cobra.Command{
 		for _, addr := range addrs {
 			go func(addr string) {
 				a, err := addressPkg.New(addr)
-				log.CheckErr(err, log.FatalLevel)
+				log.CheckErr(err, log.PanicLevel)
 				token, err := token.GetToken(a)
 				ch <- token
-				log.CheckErr(err, log.FatalLevel)
+				log.CheckErr(err, log.PanicLevel)
 			}(addr)
 			wg.Done()
 		}
@@ -103,7 +103,7 @@ var loadTokensCmd = &cobra.Command{
 		log.Info(fmt.Sprintf("Found %d distinct tokens", len(tokens)))
 		log.Done()
 		err = mysql.SetTokens(tokens)
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 	},
 }
 
@@ -113,7 +113,7 @@ var loadMethodsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Task("Looking up method signatures", log.InfoLevel)
 		signatures, err := mysql.GetStringsByQuery(fmt.Sprintf(methodsQuery, config.DB.Profile))
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		if signatures[0] == "" {
 			signatures = signatures[1:]
 		}
@@ -124,7 +124,7 @@ var loadMethodsCmd = &cobra.Command{
 		for _, signature := range signatures {
 			go func(sig string) {
 				method, err := method.GetMethod(sig)
-				log.CheckErr(err, log.FatalLevel)
+				log.CheckErr(err, log.PanicLevel)
 				ch <- method
 				wg.Done()
 			}(signature)
@@ -143,7 +143,7 @@ var loadMethodsCmd = &cobra.Command{
 		}
 		log.Done()
 		err = mysql.SetMethods(methods)
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 	},
 }
 

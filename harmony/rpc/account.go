@@ -84,7 +84,7 @@ func GetTransactionHistory(address string, pageIndex, pageSize int, txType strin
 			Timestamp: txJson.Timestamp,
 			Value:     value,
 			Method:    method,
-			Input:     txJson.Input,
+			Input:     txJson.Input[2:],
 			Logs:      nil,
 			GasAmount: txJson.GasAmount,
 			GasPrice:  gasPrice,

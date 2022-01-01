@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	tokenQuery                  = "SELECT address, symbol, name, decimals FROM harmolytics_%s.tokens"
-	transactionLogsHashQuery    = "SELECT hash, topics, address, data, logIndex FROM harmolytics_%s.transaction_logs WHERE hash = '%s'"
-	transactionLogsTypeQuery    = "SELECT hash, topics, address, data, logIndex FROM harmolytics_%s.transaction_logs WHERE topics LIKE '%s%%'"
-	transactionsMethodNameQuery = "SELECT hash, sender, receiver, input, method, unixtime, blockNum, gasAmount, gasPrice, value, shardID, toShardID FROM harmolytics_%s.transactions WHERE method IN (SELECT signature FROM harmolytics_default.methods WHERE name LIKE '%s') ORDER BY blockNum ASC"
-	transactionsLogIdQuery      = "SELECT hash, sender, receiver, input, method, unixtime, blockNum, gasAmount, gasPrice, value, shardID, toShardID FROM harmolytics_%s.transactions WHERE hash IN (SELECT hash FROM harmolytics_%s.transaction_logs WHERE topics LIKE '%s%%')"
+	tokenQuery                  = "SELECT address, symbol, name, decimals FROM harmolytics_default.tokens"
+	transactionLogsHashQuery    = "SELECT hash, topics, address, data, log_index FROM harmolytics_profile_%s.transaction_logs WHERE hash = '%s'"
+	transactionLogsTypeQuery    = "SELECT hash, topics, address, data, log_index FROM harmolytics_profile_%s.transaction_logs WHERE topics LIKE '%s%%'"
+	transactionsMethodNameQuery = "SELECT hash, sender, receiver, input, method_signature, unixtime, block_num, gas_amount, gas_price, value, shard_id, to_shard_id FROM harmolytics_profile_%s.transactions WHERE method_signature IN (SELECT signature FROM harmolytics_default.methods WHERE name LIKE '%s') ORDER BY block_num ASC"
+	transactionsLogIdQuery      = "SELECT hash, sender, receiver, input, method_signature, unixtime, block_num, gas_amount, gas_price, value, shard_id, to_shard_id FROM harmolytics_profile_%s.transactions WHERE hash IN (SELECT hash FROM harmolytics_profile_%s.transaction_logs WHERE topics LIKE '%s%%')"
 	methodQuery                 = "SELECT signature, name, parameters FROM harmolytics_default.methods WHERE signature = '%s'"
 )
 
@@ -30,6 +30,18 @@ func RunTemplate(queries string) (err error) {
 		if err != nil {
 			return errors.Wrap(err, 0)
 		}
+	}
+	return
+}
+
+func RunQuery(query string) (err error) {
+	rows, err := db.Query(query)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = rows.Close()
+	if err != nil {
+		return errors.Wrap(err, 0)
 	}
 	return
 }
@@ -69,7 +81,7 @@ func GetStringByQuery(query string) (s string, err error) {
 
 // GetTokens returns all tokens from the databse
 func GetTokens() (tokens []harmony.Token, err error) {
-	rows, err := db.Query(fmt.Sprintf(tokenQuery, profile))
+	rows, err := db.Query(tokenQuery)
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, 0)

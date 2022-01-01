@@ -50,19 +50,12 @@ func SetTransactions(transactions []harmony.Transaction) (err error) {
 
 // SetTokens takes a list of token.Token and saves those to the table tokens.
 func SetTokens(tokens []harmony.Token) (err error) {
-	data := struct {
-		Profile string
-		Tokens  []harmony.Token
-	}{
-		Profile: profile,
-		Tokens:  tokens,
-	}
 	var buf bytes.Buffer
 	t, err := template.New("fillTokens").Parse(tokensQ)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
-	err = t.Execute(&buf, data)
+	err = t.Execute(&buf, tokens)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

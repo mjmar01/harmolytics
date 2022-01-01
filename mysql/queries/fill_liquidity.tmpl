@@ -1,22 +1,22 @@
 {{range .Liquidity}}
-REPLACE INTO harmolytics_{{$.Profile}}.liquidity (
+REPLACE INTO harmolytics_profile_{{$.Profile}}.liquidity_actions (
     hash,
-    tokenA,
-    amountA,
-    tokenB,
-    amountB,
-    lpToken,
-    lpAmount,
+    token_a,
+    amount_a,
+    token_b,
+    amount_b,
+    token_lp,
+    amount_lp,
     direction
 )
 VALUES (
     '{{.TxHash}}',
-    '{{.TokenA.Address.OneAddress}}',
+    '{{.LP.TokenA.Address.OneAddress}}',
     {{.AmountA}},
-    '{{.TokenB.Address.OneAddress}}',
+    '{{.LP.TokenB.Address.OneAddress}}',
     {{.AmountB}},
-    '{{.LpToken.Address.OneAddress}}',
-    {{.LpAmount}},
+    '{{.LP.LpToken.Address.OneAddress}}',
+    {{.AmountLP}},
     '{{.Direction}}'
 );
 {{end}}

@@ -11,9 +11,9 @@ import (
 	"strings"
 )
 
-// ReadString returns the contained string given the entire data input and position of the string.
+// DecodeString returns the contained string given the entire data input and position of the string.
 // The position usually corresponds to the parameter position of the function call.
-func ReadString(data string, stringPosition int) (s string, err error) {
+func DecodeString(data string, stringPosition int) (s string, err error) {
 	stringPosition *= 64
 	data = strings.TrimPrefix(data, "0x")
 	offset, err := hexutil.DecodeUint64("0x" + strings.TrimLeft(data[stringPosition:stringPosition+64], "0"))
@@ -33,9 +33,9 @@ func ReadString(data string, stringPosition int) (s string, err error) {
 	return
 }
 
-// ReadInt returns the contained uint256 as a *big.Int given the entire data input and position of the value.
+// DecodeInt returns the contained uint256 as a *big.Int given the entire data input and position of the value.
 // The position usually corresponds to the parameter position of the function call.
-func ReadInt(data string, intPosition int) (n *big.Int, err error) {
+func DecodeInt(data string, intPosition int) (n *big.Int, err error) {
 	intPosition *= 64
 	data = strings.TrimPrefix(data, "0x")
 	bytes, err := hex.DecodeString(data[intPosition : intPosition+64])
@@ -47,10 +47,10 @@ func ReadInt(data string, intPosition int) (n *big.Int, err error) {
 	return
 }
 
-// ReadArray returns the contained array given the entire data input and position of the array.
+// DecodeArray returns the contained array given the entire data input and position of the array.
 // The array values are returned as a slice of bytes.
 // The position usually corresponds to the parameter position of the function call.
-func ReadArray(data string, arrayPosition int) (arr [][]byte, err error) {
+func DecodeArray(data string, arrayPosition int) (arr [][]byte, err error) {
 	arrayPosition *= 64
 	data = strings.TrimPrefix(data, "0x")
 	offset, err := hexutil.DecodeUint64("0x" + strings.TrimLeft(data[arrayPosition:arrayPosition+64], "0"))
@@ -74,14 +74,20 @@ func ReadArray(data string, arrayPosition int) (arr [][]byte, err error) {
 	return
 }
 
-// ReadAddress returns the contained harmony.Address given the entire data input and position of the address.
+// DecodeAddress returns the contained harmony.Address given the entire data input and position of the address.
 // The position usually corresponds to the parameter position of the function call.
-func ReadAddress(data string, addressPosition int) (a harmony.Address, err error) {
+func DecodeAddress(data string, addressPosition int) (a harmony.Address, err error) {
 	addressPosition *= 64
 	data = strings.TrimPrefix(data, "0x")
 	a, err = address.New("0x" + data[addressPosition+24:addressPosition+64])
 	if err != nil {
 		return
 	}
+	return
+}
+
+// EncodeAddress returns the 256 bit representation of an address for use as input etc...
+func EncodeAddress(a harmony.Address) (s string) {
+	s = hex.EncodeToString(append(make([]byte, 12), a.EthAddress.Bytes()...))
 	return
 }

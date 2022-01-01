@@ -1,0 +1,186 @@
+create schema if not exists harmolytics_profile_{{.}};
+create schema if not exists harmolytics_default;
+create schema if not exists harmolytics_historic;
+
+
+create table if not exists harmolytics_default.addresses
+(
+    address char(42) not null,
+    type    tinytext not null,
+    name    tinytext not null,
+    constraint table_name_pk
+        primary key (address)
+);
+
+create table if not exists harmolytics_default.methods
+(
+    signature  char(8)  not null,
+    name       tinytext null,
+    parameters text     null,
+    constraint methods_pk
+        primary key (signature)
+);
+
+create table if not exists harmolytics_default.tokens
+(
+    address  char(42) not null,
+    symbol   tinytext not null,
+    name     tinytext not null,
+    decimals tinyint  not null,
+    constraint tokens_pk
+        primary key (address)
+);
+
+create table if not exists harmolytics_default.liquidity_pools
+(
+    address char(42) not null,
+    token_a char(42) not null,
+    token_b char(42) not null,
+    constraint liquidity_pools_pk
+        primary key (address),
+    constraint liquidity_pools_address_address_fk
+        foreign key (address) references harmolytics_default.tokens (address),
+    constraint liquidity_pools_token_a_address_fk
+        foreign key (token_a) references harmolytics_default.tokens (address),
+    constraint liquidity_pools_token_b_address_fk
+        foreign key (token_b) references harmolytics_default.tokens (address)
+);
+
+create table if not exists harmolytics_historic.liquidity_ratios
+(
+    liquidity_pool char(42)     not null,
+    block_num      int unsigned not null,
+    ratio          double       not null,
+    constraint liquidity_ratios_pk
+        primary key (liquidity_pool, block_num),
+    constraint liquidity_ratios_liquidity_pool_address_fk
+        foreign key (liquidity_pool) references harmolytics_default.liquidity_pools (address)
+);
+
+
+
+create table if not exists harmolytics_profile_{{.}}.transactions
+(
+    hash             char(66)         not null,
+    sender           char(42)         not null,
+    receiver         char(42)         not null,
+    input            text             null,
+    method_signature char(8)          null,
+    unixtime         bigint unsigned  not null,
+    block_num        int unsigned     not null,
+    gas_amount       decimal(65)      not null,
+    gas_price        decimal(65)      not null,
+    value            decimal(65)      null,
+    shard_id         tinyint unsigned not null,
+    to_shard_id      tinyint unsigned not null,
+    constraint transactions_pk
+        primary key (hash)
+);
+
+create table if not exists harmolytics_profile_{{.}}.transaction_logs
+(
+    hash      char(66)         not null,
+    log_index int unsigned not null,
+    data      text             null,
+    topics    text             null,
+    address   char(42),
+    constraint transaction_logs_pk
+        primary key (hash, log_index),
+    constraint transaction_logs_hash_hash_fk
+        foreign key (hash) references harmolytics_profile_{{.}}.transactions (hash)
+            on update cascade on delete cascade
+);
+
+create table if not exists harmolytics_profile_{{.}}.swaps
+(
+    hash          char(66)    not null,
+    input_token   char(42)    not null,
+    input_amount  decimal(65) not null,
+    output_token  char(42)    not null,
+    output_amount decimal(65) not null,
+    constraint swaps_pk
+        primary key (hash),
+    constraint swaps_hash_hash_fk
+        foreign key (hash) references harmolytics_profile_{{.}}.transactions (hash)
+            on update cascade on delete cascade,
+    constraint swaps_input_token_address_fk
+        foreign key (input_token) references harmolytics_default.tokens (address)
+            on update cascade on delete cascade,
+    constraint swaps_output_amount_address_fk
+        foreign key (output_token) references harmolytics_default.tokens (address)
+            on update cascade on delete cascade
+);
+
+create table if not exists harmolytics_profile_{{.}}.liquidity_actions
+(
+    hash      char(66)    not null,
+    token_a   char(42)    not null,
+    amount_a  decimal(65) not null,
+    token_b   char(42)    not null,
+    amount_b  decimal(65) not null,
+    token_lp  char(42)    not null,
+    amount_lp decimal(65) not null,
+    direction char(3)     not null,
+    constraint liquidity_actions_pk
+        primary key (hash),
+    constraint liquidity_actions_hash_hash_fk
+        foreign key (hash) references harmolytics_profile_{{.}}.transactions (hash)
+            on update cascade on delete cascade,
+    constraint liquidity_actions_token_a_address_fk
+        foreign key (token_a) references harmolytics_default.tokens (address)
+            on update cascade on delete cascade,
+    constraint liquidity_actions_token_b_address_fk
+        foreign key (token_b) references harmolytics_default.tokens (address)
+            on update cascade on delete cascade
+);
+
+create table if not exists harmolytics_profile_{{.}}.token_transfers
+(
+    id       bigint unsigned auto_increment,
+    hash     char(66)    not null,
+    token    char(42)    not null,
+    sender   char(42)    null,
+    receiver char(42)    not null,
+    amount   decimal(65) not null,
+    constraint token_transfers_pk
+        primary key (id),
+    constraint token_transfers_hash_hash_fk
+        foreign key (hash) references harmolytics_profile_{{.}}.transactions (hash)
+            on update cascade on delete cascade,
+    constraint token_transfers_token_address_fk
+        foreign key (token) references harmolytics_default.tokens (address)
+            on update cascade on delete cascade
+);
+
+create or replace view harmolytics_profile_{{.}}.hr_swaps as
+select `harmolytics_profile_{{.}}`.`swaps`.`hash`                                       AS `hash`,
+       (`harmolytics_profile_{{.}}`.`swaps`.`input_amount` / pow(10, `t1`.`decimals`))  AS `inputAmount`,
+       `t1`.`symbol`                                                                   AS `inputToken`,
+       (`harmolytics_profile_{{.}}`.`swaps`.`output_amount` / pow(10, `t2`.`decimals`)) AS `outputAmount`,
+       `t2`.`symbol`                                                                   AS `outputToken`,
+       `tx`.`block_num`                                                                AS `block_num`
+from (((`harmolytics_profile_{{.}}`.`swaps` join `harmolytics_default`.`tokens` `t1`) join `harmolytics_default`.`tokens` `t2`)
+         join `harmolytics_profile_{{.}}`.`transactions` `tx`)
+where ((`harmolytics_profile_{{.}}`.`swaps`.`input_token` = `t1`.`address`) and
+       (`harmolytics_profile_{{.}}`.`swaps`.`output_token` = `t2`.`address`) and
+       (`harmolytics_profile_{{.}}`.`swaps`.`hash` = `tx`.`hash`))
+order by `tx`.`block_num`;
+
+
+
+create or replace view harmolytics_profile_{{.}}.hr_token_transfers as
+select `harmolytics_profile_{{.}}`.`token_transfers`.`hash`     AS `txHash`,
+       `harmolytics_profile_{{.}}`.`token_transfers`.`sender`   AS `sender`,
+       `harmolytics_profile_{{.}}`.`token_transfers`.`receiver` AS `receiver`,
+       `harmolytics_default`.`tokens`.`symbol`                 AS `token`,
+       (`harmolytics_profile_{{.}}`.`token_transfers`.`amount` /
+        pow(10, `harmolytics_default`.`tokens`.`decimals`))    AS `amount`,
+       `harmolytics_profile_{{.}}`.`transactions`.`block_num`   AS `block_num`
+from ((`harmolytics_profile_{{.}}`.`token_transfers` join `harmolytics_default`.`tokens`)
+         join `harmolytics_profile_{{.}}`.`transactions`)
+where ((`harmolytics_profile_{{.}}`.`token_transfers`.`token` = `harmolytics_default`.`tokens`.`address`) and
+       (`harmolytics_profile_{{.}}`.`token_transfers`.`hash` = `harmolytics_profile_{{.}}`.`transactions`.`hash`))
+order by `transactions`.`block_num`;
+
+
+

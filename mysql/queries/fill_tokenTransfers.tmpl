@@ -1,6 +1,6 @@
 {{range .Transfers}}
-REPLACE INTO harmolytics_{{$.Profile}}.token_transfers (
-    txHash,
+REPLACE INTO harmolytics_profile_{{$.Profile}}.token_transfers (
+    hash,
     token,
     sender,
     receiver,

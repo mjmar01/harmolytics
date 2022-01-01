@@ -36,11 +36,11 @@ var rootCmd = &cobra.Command{
 You will need to supply your own MySQL DB as backend`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		err := initViper()
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		err = initFlags(cmd)
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		err = initConfigVars()
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		log.SetLogLevel(config.LogLevel)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -109,7 +109,7 @@ func initConfigVars() (err error) {
 // Execute executes the root command.
 func Execute() {
 	err := rootCmd.Execute()
-	log.CheckErr(err, log.FatalLevel)
+	log.CheckErr(err, log.PanicLevel)
 }
 
 func init() {

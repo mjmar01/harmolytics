@@ -1,17 +1,17 @@
 {{range $i, $t := .Transactions}}
-REPLACE INTO harmolytics_{{$.Profile}}.transactions (
+REPLACE INTO harmolytics_profile_{{$.Profile}}.transactions (
     hash,
     sender,
     receiver,
     input,
-    method,
+    method_signature,
     unixtime,
-    gasAmount,
-    gasPrice,
+    gas_amount,
+    gas_price,
     value,
-    shardID,
-    toShardID,
-    BlockNum
+    shard_id,
+    to_shard_id,
+    block_num
 )
 VALUES (
     '{{.TxHash}}',
@@ -30,9 +30,9 @@ VALUES (
 
 {{range .Logs}}
 {{$first := true}}
-REPLACE INTO harmolytics_{{$.Profile}}.transaction_logs (
+REPLACE INTO harmolytics_profile_{{$.Profile}}.transaction_logs (
     hash,
-    logIndex,
+    log_index,
     address,
     data,
     topics

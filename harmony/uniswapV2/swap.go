@@ -2,6 +2,7 @@ package uniswapV2
 
 import (
 	hexEncoding "encoding/hex"
+	"fmt"
 	"harmolytics/harmony"
 	"harmolytics/harmony/hex"
 	"math/big"
@@ -17,17 +18,19 @@ const (
 
 func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 	// Get involved tokens
-	pathOffset := getPathOffset(tx.Input)
-	path, err := hex.ReadArray(tx.Input[10:], pathOffset)
+	pathOffset := getPathOffset(tx.Method.Signature)
+	path, err := hex.DecodeArray(tx.Input[8:], pathOffset)
 	if err != nil {
+		fmt.Println(pathOffset)
+		fmt.Println(tx.Input[8:])
 		return
 	}
 	pathLeft := len(path) - 1
-	inputAddr, err := hex.ReadAddress(hexEncoding.EncodeToString(path[0]), 0)
+	inputAddr, err := hex.DecodeAddress(hexEncoding.EncodeToString(path[0]), 0)
 	if err != nil {
 		return
 	}
-	outputAddr, err := hex.ReadAddress(hexEncoding.EncodeToString(path[len(path)-1]), 0)
+	outputAddr, err := hex.DecodeAddress(hexEncoding.EncodeToString(path[len(path)-1]), 0)
 	if err != nil {
 		return
 	}
@@ -46,11 +49,11 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 			// If it's the first swap of the path read input amount
 			if pathLeft == len(path)-1 {
 				inputAmount := big.NewInt(0)
-				aIn0, err := hex.ReadInt(txLog.Data, 0)
+				aIn0, err := hex.DecodeInt(txLog.Data, 0)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
-				aIn1, err := hex.ReadInt(txLog.Data, 1)
+				aIn1, err := hex.DecodeInt(txLog.Data, 1)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
@@ -61,11 +64,11 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 			// If it's the last swap of the path read output amount
 			if pathLeft == 0 {
 				outputAmount := big.NewInt(0)
-				aOut0, err := hex.ReadInt(txLog.Data, 2)
+				aOut0, err := hex.DecodeInt(txLog.Data, 2)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
-				aOut1, err := hex.ReadInt(txLog.Data, 3)
+				aOut1, err := hex.DecodeInt(txLog.Data, 3)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
@@ -78,8 +81,7 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 	return
 }
 
-func getPathOffset(input string) int {
-	methodSig := input[2:10]
+func getPathOffset(methodSig string) int {
 	switch methodSig {
 	case swapEth, swapExEth, swapExEthSup:
 		return 1

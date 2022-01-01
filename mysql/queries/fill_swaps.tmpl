@@ -1,10 +1,10 @@
 {{range .Swaps}}
-REPLACE INTO harmolytics_{{$.Profile}}.swaps (
+REPLACE INTO harmolytics_profile_{{$.Profile}}.swaps (
     hash,
-    inputToken,
-    outputToken,
-    inputAmount,
-    outputAmount
+    input_token,
+    output_token,
+    input_amount,
+    output_amount
 )
 VALUES (
     '{{.TxHash}}',

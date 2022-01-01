@@ -23,6 +23,7 @@ const (
 	PasswordParam       = "db-password"
 	ProfileParam        = "profile"
 	RpcUrlParam         = "rpc-url"
+	HistoricRpcUrlParam = "historic-rpc-url"
 	KnownAddressesParam = "known-addresses"
 )
 
@@ -35,10 +36,11 @@ type DbSubConfig struct {
 }
 
 var config = struct {
-	LogLevel  int
-	DB        DbSubConfig
-	RpcUrl    string
-	KnownInfo mysql.KnownInfo `yaml:"known-addresses"`
+	LogLevel       int
+	DB             DbSubConfig
+	RpcUrl         string
+	HistoricRpcUrl string
+	KnownInfo      mysql.KnownInfo `yaml:"known-addresses"`
 }{}
 
 var configCmd = &cobra.Command{
@@ -46,16 +48,16 @@ var configCmd = &cobra.Command{
 	Short: "Interact with the config file",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		err := initViper()
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		err = initFlags(cmd)
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		err = initConfigVars()
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		log.SetLogLevel(config.LogLevel)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Help()
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 	},
 }
 
@@ -72,6 +74,7 @@ var configGetCmd = &cobra.Command{
 		fmt.Printf(" %s:    %s\n", UserParam, viper.GetString(UserParam))
 		fmt.Print("Config Variables:\n")
 		fmt.Printf(" %s: %s\n", RpcUrlParam, viper.GetString(RpcUrlParam))
+		fmt.Printf(" %s: %s\n", HistoricRpcUrlParam, viper.GetString(HistoricRpcUrlParam))
 	},
 }
 
@@ -93,7 +96,7 @@ var configSetCmd = &cobra.Command{
 			writeConfig()
 		} else {
 			err := cmd.Help()
-			log.CheckErr(err, log.FatalLevel)
+			log.CheckErr(err, log.PanicLevel)
 		}
 	},
 }
@@ -103,7 +106,7 @@ var configDatabaseCmd = &cobra.Command{
 	Short: "Configures database connection and saves it to config",
 	Run: func(cmd *cobra.Command, args []string) {
 		dbPassword, err := mysql.ConnectDatabase(config.DB.User, "", config.DB.Host, config.DB.Port, config.DB.Profile, cryptKey)
-		log.CheckErr(err, log.FatalLevel)
+		log.CheckErr(err, log.PanicLevel)
 		viper.Set(PasswordParam, dbPassword)
 		viper.Set(UserParam, config.DB.User)
 		viper.Set(HostParam, config.DB.Host)
@@ -116,21 +119,22 @@ func writeConfig() {
 	log.Task("Rewriting config file", log.DebugLevel)
 	loadViperValues()
 	t, err := template.New("config").Parse(configTemplate)
-	log.CheckErr(err, log.FatalLevel)
+	log.CheckErr(err, log.PanicLevel)
 	f, err := os.OpenFile(viper.ConfigFileUsed(), os.O_WRONLY, 0660)
-	log.CheckErr(err, log.FatalLevel)
+	log.CheckErr(err, log.PanicLevel)
 	err = f.Truncate(0)
-	log.CheckErr(err, log.FatalLevel)
+	log.CheckErr(err, log.PanicLevel)
 	_, err = f.Seek(0, 0)
-	log.CheckErr(err, log.FatalLevel)
+	log.CheckErr(err, log.PanicLevel)
 	err = t.Execute(f, config)
-	log.CheckErr(err, log.FatalLevel)
+	log.CheckErr(err, log.PanicLevel)
 	log.Done()
 }
 
 func loadViperValues() {
 	config.LogLevel = viper.GetInt(LogLevelParam)
 	config.RpcUrl = viper.GetString(RpcUrlParam)
+	config.HistoricRpcUrl = viper.GetString(HistoricRpcUrlParam)
 	config.DB.Profile = viper.GetString(ProfileParam)
 	config.DB.Host = viper.GetString(HostParam)
 	config.DB.Port = viper.GetString(PortParam)
