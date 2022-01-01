@@ -18,6 +18,7 @@ Nonetheless, if you want to use it or build upon it feel free to test it. You wi
 ./harmolytics load tokens
 
 ./harmolytics decode swaps
+./harmolytics decode liquidity
 ./harmolytics decode transfers
 ```
 If nothing ended up on fire by now you should have a database full of all kinds of data. For a better overview there are views however I recommend using raw data until displaying to avoid precision errors.
