@@ -1,12 +1,14 @@
 package uniswapV2
 
 import (
+	hexEncoding "encoding/hex"
 	"harmolytics/harmony"
 	"harmolytics/harmony/address"
 	"harmolytics/harmony/hex"
 	"harmolytics/harmony/token"
 	"harmolytics/harmony/transaction"
 	"math/big"
+	"sort"
 )
 
 const (
@@ -86,6 +88,54 @@ func DecodeLiquidityAction(tx harmony.Transaction) (la harmony.LiquidityAction, 
 			} else if tTx.Sender.OneAddress == tx.Sender.OneAddress {
 				la.LP.LpToken = tTx.Token
 				la.AmountLP = tTx.Amount
+			}
+		}
+	}
+	return
+}
+
+// DecodeLiquidity receives a swap transaction and returns the list of involved liquidity pools
+func DecodeLiquidity(tx harmony.Transaction) (lps []harmony.LiquidityPool, err error) {
+	// Get involved tokens
+	pathOffset := getPathOffset(tx.Method.Signature)
+	path, err := hex.DecodeArray(tx.Input[8:], pathOffset)
+	if err != nil {
+		return
+	}
+	var pathTokens []harmony.Token
+	for i, _ := range path {
+		addr, err := hex.DecodeAddress(hexEncoding.EncodeToString(path[i]), 0)
+		if err != nil {
+			return nil, err
+		}
+		pathTokens = append(pathTokens, harmony.Token{Address: addr})
+	}
+	// Get token transfers
+	ttxs, err := transaction.DecodeTokenTransaction(tx)
+	if err != nil {
+		return
+	}
+	// Crosscheck path and ttxs
+	for i := 0; i < len(path)-1; i++ {
+		for _, ttx := range ttxs {
+			if ttx.Token.Address.OneAddress == pathTokens[i].Address.OneAddress {
+				for _, ttx2 := range ttxs {
+					if ttx2.Sender.OneAddress == ttx.Receiver.OneAddress &&
+						ttx2.Token.Address.OneAddress == pathTokens[i+1].Address.OneAddress {
+						sortedTokens := []harmony.Token{
+							{Address: pathTokens[i].Address},
+							{Address: pathTokens[i+1].Address},
+						}
+						sort.Slice(sortedTokens, func(i, j int) bool {
+							return sortedTokens[i].Address.OneAddress < sortedTokens[j].Address.OneAddress
+						})
+						lps = append(lps, harmony.LiquidityPool{
+							TokenA:  sortedTokens[0],
+							TokenB:  sortedTokens[1],
+							LpToken: harmony.Token{Address: ttx.Receiver},
+						})
+					}
+				}
 			}
 		}
 	}

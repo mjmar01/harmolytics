@@ -54,8 +54,8 @@ var decodeSwapsCmd = &cobra.Command{
 	},
 }
 
-var decodeLiquidityCmd = &cobra.Command{
-	Use:   "liquidity",
+var decodeLiquidityActionsCmd = &cobra.Command{
+	Use:   "liquidity-actions",
 	Short: "Analyzes uniswap LP interactions",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Task("Analyzing liquidity", log.InfoLevel)
@@ -73,9 +73,32 @@ var decodeLiquidityCmd = &cobra.Command{
 		}
 		log.Done()
 		log.Task("Saving liquidity actions to database", log.InfoLevel)
-		err = mysql.SetLiquidity(lpActions)
+		err = mysql.SetLiquidityActions(lpActions)
 		log.CheckErr(err, log.PanicLevel)
 		log.Done()
+	},
+}
+
+var decodeLiquidityPoolsCmd = &cobra.Command{
+	Use:   "liquidity-pools",
+	Short: "Reads liquidity pool information from swaps",
+	Run: func(cmd *cobra.Command, args []string) {
+		txs, err := mysql.GetTransactionsByMethodName("swap%")
+		log.CheckErr(err, log.PanicLevel)
+		uniqueLPs := make(map[string]harmony.LiquidityPool)
+		for _, tx := range txs {
+			lps, err := uniswapV2.DecodeLiquidity(tx)
+			log.CheckErr(err, log.PanicLevel)
+			for _, lp := range lps {
+				uniqueLPs[lp.LpToken.Address.OneAddress] = lp
+			}
+		}
+		var lps []harmony.LiquidityPool
+		for _, lp := range uniqueLPs {
+			lps = append(lps, lp)
+		}
+		err = mysql.SetLiquidityPools(lps)
+		log.CheckErr(err, log.PanicLevel)
 	},
 }
 
@@ -104,7 +127,8 @@ var decodeTransfersCmd = &cobra.Command{
 
 func init() {
 	decodeCmd.AddCommand(decodeSwapsCmd)
-	decodeCmd.AddCommand(decodeLiquidityCmd)
+	decodeCmd.AddCommand(decodeLiquidityActionsCmd)
+	decodeCmd.AddCommand(decodeLiquidityPoolsCmd)
 	decodeCmd.AddCommand(decodeTransfersCmd)
 	decodeCmd.PersistentFlags().StringVar(&config.DB.Host, HostParam, "127.0.0.1", "")
 	decodeCmd.PersistentFlags().StringVar(&config.DB.Port, PortParam, "3306", "")

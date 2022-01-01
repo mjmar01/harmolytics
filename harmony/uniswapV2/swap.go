@@ -2,7 +2,6 @@ package uniswapV2
 
 import (
 	hexEncoding "encoding/hex"
-	"fmt"
 	"harmolytics/harmony"
 	"harmolytics/harmony/hex"
 	"math/big"
@@ -21,8 +20,6 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 	pathOffset := getPathOffset(tx.Method.Signature)
 	path, err := hex.DecodeArray(tx.Input[8:], pathOffset)
 	if err != nil {
-		fmt.Println(pathOffset)
-		fmt.Println(tx.Input[8:])
 		return
 	}
 	pathLeft := len(path) - 1

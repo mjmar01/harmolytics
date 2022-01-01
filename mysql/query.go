@@ -24,6 +24,7 @@ func RunTemplate(queries string) (err error) {
 	for _, query := range strings.Split(strings.TrimRight(queries, " ;\n\t"), ";") {
 		rows, err := db.Query(query)
 		if err != nil {
+			fmt.Println(query)
 			return errors.Wrap(err, 0)
 		}
 		err = rows.Close()
