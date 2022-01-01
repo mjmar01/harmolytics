@@ -83,6 +83,7 @@ type Swap struct {
 	OutToken  Token
 	InAmount  *big.Int
 	OutAmount *big.Int
+	Path      []LiquidityPool
 }
 
 type LiquidityPool struct {

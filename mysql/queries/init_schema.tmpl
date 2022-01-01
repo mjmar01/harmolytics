@@ -96,6 +96,7 @@ create table if not exists harmolytics_profile_{{.}}.swaps
     input_amount  decimal(65) not null,
     output_token  char(42)    not null,
     output_amount decimal(65) not null,
+    path          text        not null,
     constraint swaps_pk
         primary key (hash),
     constraint swaps_hash_hash_fk

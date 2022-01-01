@@ -32,10 +32,15 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 		return
 	}
 	// Fill part of the swap
+	lpPath, err := DecodeLiquidity(tx)
+	if err != nil {
+		return
+	}
 	s = harmony.Swap{
 		TxHash:   tx.TxHash,
 		InToken:  harmony.Token{Address: inputAddr},
 		OutToken: harmony.Token{Address: outputAddr},
+		Path:     lpPath,
 	}
 	// Read through logs for swap events
 	sort.Slice(tx.Logs, func(i, j int) bool {
