@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/go-errors/errors"
 	"github.com/mjmar01/cli-log/log"
 	"github.com/spf13/cobra"
 	"harmolytics/harmony"
@@ -10,7 +11,9 @@ import (
 	"harmolytics/harmony/rpc"
 	"harmolytics/harmony/token"
 	"harmolytics/harmony/transaction"
+	"harmolytics/harmony/uniswapV2"
 	"harmolytics/mysql"
+	"math/big"
 	"sync"
 )
 
@@ -147,6 +150,50 @@ var loadMethodsCmd = &cobra.Command{
 	},
 }
 
+var loadLiquidityRatiosCmd = &cobra.Command{
+	Use:   "ratios",
+	Short: "Loads relevant historic liquidity ratios during swaps",
+	Run: func(cmd *cobra.Command, args []string) {
+		type lookup struct {
+			lp    harmony.LiquidityPool
+			block uint64
+			ratio *big.Rat
+		}
+		txs, err := mysql.GetTransactionsByMethodName("swap%")
+		log.CheckErr(err, log.PanicLevel)
+		var lookups []lookup
+		for _, tx := range txs {
+			s, err := uniswapV2.DecodeSwap(tx)
+			log.CheckErr(err, log.PanicLevel)
+			for _, pool := range s.Path {
+				lookups = append(lookups, lookup{lp: pool, block: tx.BlockNum})
+			}
+		}
+		wg := sync.WaitGroup{}
+		wg.Add(len(lookups))
+		ch := make(chan lookup, len(lookups))
+		for _, lk := range lookups {
+			go func(l lookup) {
+				r, err := uniswapV2.GetLiquidityRatio(l.lp, l.block)
+				if err != nil {
+					fmt.Println(err.(*errors.Error).ErrorStack())
+					wg.Done()
+					panic(err)
+				}
+				l.ratio = r
+				ch <- l
+				wg.Done()
+			}(lk)
+		}
+		wg.Wait()
+		for i := 0; i < len(lookups); i++ {
+			lk := <-ch
+			fmt.Printf("%s (%s-%s): %s %d\n", lk.lp.LpToken.Address.OneAddress,
+				lk.lp.TokenA.Address.OneAddress, lk.lp.TokenB.Address.OneAddress, lk.ratio.FloatString(10), lk.block)
+		}
+	},
+}
+
 func init() {
 	loadTransactionsCmd.PersistentFlags().StringVarP(&address, "address", "a", "", "")
 	loadCmd.PersistentFlags().StringVar(&config.DB.Host, HostParam, "127.0.0.1", "")
@@ -156,5 +203,6 @@ func init() {
 	loadCmd.AddCommand(loadMethodsCmd)
 	loadCmd.AddCommand(loadTransactionsCmd)
 	loadCmd.AddCommand(loadTokensCmd)
+	loadCmd.AddCommand(loadLiquidityRatiosCmd)
 	rootCmd.AddCommand(loadCmd)
 }

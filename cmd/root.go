@@ -98,6 +98,7 @@ func initFlags(cmd *cobra.Command) (err error) {
 func initConfigVars() (err error) {
 	config.DB.Password = viper.GetString(PasswordParam)
 	config.RpcUrl = viper.GetString(RpcUrlParam)
+	config.HistoricRpcUrl = viper.GetString(HistoricRpcUrlParam)
 	opt := viperPkg.DecoderConfigOption(func(decoderConfig *mapstructure.DecoderConfig) { decoderConfig.TagName = "yaml" })
 	err = viper.UnmarshalKey(KnownAddressesParam, &config.KnownInfo.Addrs, opt)
 	if err != nil {

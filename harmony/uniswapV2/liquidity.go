@@ -20,7 +20,8 @@ const (
 )
 
 // GetLiquidityRatio returns the ratio TokenB/TokenA as in: 1 TokenA = r TokenB
-func GetLiquidityRatio(lp harmony.LiquidityPool, blockNum int) (r *big.Rat, err error) {
+func GetLiquidityRatio(lp harmony.LiquidityPool, blockNum uint64) (r *big.Rat, err error) {
+	r = new(big.Rat)
 	AmountA, err := token.GetBalanceOf(lp.LpToken.Address, lp.TokenA, blockNum)
 	if err != nil {
 		return
@@ -116,6 +117,7 @@ func DecodeLiquidity(tx harmony.Transaction) (lps []harmony.LiquidityPool, err e
 		return
 	}
 	// Crosscheck path and ttxs
+path:
 	for i := 0; i < len(path)-1; i++ {
 		for _, ttx := range ttxs {
 			if ttx.Token.Address.OneAddress == pathTokens[i].Address.OneAddress {
@@ -134,6 +136,7 @@ func DecodeLiquidity(tx harmony.Transaction) (lps []harmony.LiquidityPool, err e
 							TokenB:  sortedTokens[1],
 							LpToken: harmony.Token{Address: ttx.Receiver},
 						})
+						continue path
 					}
 				}
 			}

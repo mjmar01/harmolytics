@@ -59,7 +59,7 @@ func GetToken(a harmony.Address) (t harmony.Token, err error) {
 }
 
 // GetBalanceOf returns the amount harmony.Address a holds of harmony.Token t at the given block. 0 to use the latest block.
-func GetBalanceOf(a harmony.Address, t harmony.Token, blockNum int) (balance *big.Int, err error) {
+func GetBalanceOf(a harmony.Address, t harmony.Token, blockNum uint64) (balance *big.Int, err error) {
 	var rawBalance string
 	input := getBalanceMethod + hex.EncodeAddress(a)
 	if blockNum == 0 {
