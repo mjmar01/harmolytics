@@ -13,6 +13,7 @@
 verbosity: {{.LogLevel}}
 # Harmony RPC API to use
 rpc-url: {{.RpcUrl}}
+historic-rpc-url: {{.HistoricRpcUrl}}
 
 ## Database
 profile: {{.DB.Profile}}
@@ -21,11 +22,3 @@ db-port: {{.DB.Port}}
 db-user: {{if .DB.User}}{{.DB.User}}{{else}}~{{end}}
 db-password: {{if .DB.Password}}{{.DB.Password}}{{else}}~{{end}}
 
-## Known Info
-# Known Addresses
-known-addresses:
-{{- range .KnownInfo.Addrs}}
-  - one-addr: {{.OneAddress}}
-    type: {{.Type}}
-    name: {{.Name}}
-{{- end}}
