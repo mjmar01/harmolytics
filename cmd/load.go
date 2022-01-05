@@ -13,7 +13,6 @@ import (
 	"harmolytics/harmony/transaction"
 	"harmolytics/harmony/uniswapV2"
 	"harmolytics/mysql"
-	"math/big"
 	"sync"
 )
 
@@ -154,43 +153,40 @@ var loadLiquidityRatiosCmd = &cobra.Command{
 	Use:   "ratios",
 	Short: "Loads relevant historic liquidity ratios during swaps",
 	Run: func(cmd *cobra.Command, args []string) {
-		type lookup struct {
-			lp    harmony.LiquidityPool
-			block uint64
-			ratio *big.Rat
-		}
 		txs, err := mysql.GetTransactionsByMethodName("swap%")
 		log.CheckErr(err, log.PanicLevel)
-		var lookups []lookup
+		var lookups []harmony.HistoricLiquidityRatio
 		for _, tx := range txs {
 			s, err := uniswapV2.DecodeSwap(tx)
 			log.CheckErr(err, log.PanicLevel)
 			for _, pool := range s.Path {
-				lookups = append(lookups, lookup{lp: pool, block: tx.BlockNum})
+				lookups = append(lookups, harmony.HistoricLiquidityRatio{LP: pool, BlockNum: tx.BlockNum})
 			}
 		}
 		wg := sync.WaitGroup{}
 		wg.Add(len(lookups))
-		ch := make(chan lookup, len(lookups))
+		ch := make(chan harmony.HistoricLiquidityRatio, len(lookups))
 		for _, lk := range lookups {
-			go func(l lookup) {
-				r, err := uniswapV2.GetLiquidityRatio(l.lp, l.block)
+			go func(l harmony.HistoricLiquidityRatio) {
+				r, err := uniswapV2.GetLiquidityRatio(l.LP, l.BlockNum)
 				if err != nil {
 					fmt.Println(err.(*errors.Error).ErrorStack())
 					wg.Done()
 					panic(err)
 				}
-				l.ratio = r
+				l.Ratio = r
 				ch <- l
 				wg.Done()
 			}(lk)
 		}
 		wg.Wait()
+		var ratios []harmony.HistoricLiquidityRatio
 		for i := 0; i < len(lookups); i++ {
 			lk := <-ch
-			fmt.Printf("%s (%s-%s): %s %d\n", lk.lp.LpToken.Address.OneAddress,
-				lk.lp.TokenA.Address.OneAddress, lk.lp.TokenB.Address.OneAddress, lk.ratio.FloatString(10), lk.block)
+			ratios = append(ratios, lk)
 		}
+		err = mysql.SetLiquidityRatios(ratios)
+		log.CheckErr(err, log.PanicLevel)
 	},
 }
 

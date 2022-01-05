@@ -26,6 +26,9 @@ var liquidityActionsQ string
 //go:embed queries/fill_liquidity_pools.tmpl
 var liquidityPoolsQ string
 
+//go:embed queries/fill_liquidity_ratios.tmpl
+var liquidityRatiosQ string
+
 //go:embed queries/fill_tokenTransfers.tmpl
 var tokenTransfersQ string
 
@@ -129,6 +132,20 @@ func SetLiquidityPools(liquidityPools []harmony.LiquidityPool) (err error) {
 		return errors.Wrap(err, 0)
 	}
 	err = t.Execute(&buf, liquidityPools)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = RunTemplate(buf.String())
+	return
+}
+
+func SetLiquidityRatios(ratios []harmony.HistoricLiquidityRatio) (err error) {
+	var buf bytes.Buffer
+	t, err := template.New("fillLiquidityRatios").Parse(liquidityRatiosQ)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = t.Execute(&buf, ratios)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

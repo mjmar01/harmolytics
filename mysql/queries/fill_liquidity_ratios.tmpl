@@ -1,0 +1,12 @@
+{{range .}}
+REPLACE INTO harmolytics_historic.liquidity_ratios (
+    liquidity_pool,
+    block_num,
+    ratio
+)
+VALUES (
+    '{{.LP.LpToken.Address.OneAddress}}',
+    {{.BlockNum}},
+    {{.Ratio}}
+);
+{{end}}

@@ -106,6 +106,12 @@ type LiquidityAction struct {
 	Direction string
 }
 
+type HistoricLiquidityRatio struct {
+	LP       LiquidityPool
+	Ratio    *big.Rat
+	BlockNum uint64
+}
+
 type Claim struct {
 	TxHash string
 	Token  Token

@@ -4,6 +4,7 @@ package rpc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/go-errors/errors"
 	"io/ioutil"
 	"net/http"
@@ -94,6 +95,7 @@ func rawSafeRpcCall(method string, params interface{}) (result []byte, err error
 		}
 		err = json.Unmarshal(ret, &rst)
 		if err != nil {
+			fmt.Println(string(ret))
 			return nil, errors.Wrap(err, 0)
 		}
 		out := rst.Result
