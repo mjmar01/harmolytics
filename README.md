@@ -23,6 +23,8 @@ Nonetheless, if you want to use it or build upon it feel free to test it. You wi
 ./harmolytics decode liquidity-pools
 
 ./harmolytics load ratios
+
+./harmolytics analyze fees
 ```
 If nothing ended up on fire by now you should have a database full of all kinds of data. For a better overview there are views however I recommend using raw data until displaying to avoid precision errors.
 
