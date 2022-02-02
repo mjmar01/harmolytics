@@ -38,7 +38,7 @@ Quite a bit I still want to do with this. No guarantee any of this will ever mak
 
 - Historical price data
 - Better info regarding masterChef contracts and similar
-- Fee analysis (Uniswap, Tokenomics, etc...)
+- Fee analysis (~~Uniswap~~, Tokenomics, etc...)
 - Some sort of visualization tools like portfolio over time etc...
 - More resilient design and error handling
 - CSV export capabilities and maybe even remove the need for a database
