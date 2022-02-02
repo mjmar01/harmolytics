@@ -32,6 +32,9 @@ var liquidityRatiosQ string
 //go:embed queries/fill_tokenTransfers.tmpl
 var tokenTransfersQ string
 
+//go:embed queries/fill_fees.tmpl
+var swapFeesQ string
+
 // SetTransactions takes a list of transaction.Transaction and saves those to the tables transactions and transaction_logs.
 func SetTransactions(transactions []harmony.Transaction) (err error) {
 	data := struct {
@@ -163,6 +166,27 @@ func SetTokenTransfers(transfers []harmony.TokenTransaction) (err error) {
 	}
 	var buf bytes.Buffer
 	t, err := template.New("fillTokenTransfers").Parse(tokenTransfersQ)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = t.Execute(&buf, data)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = RunTemplate(buf.String())
+	return
+}
+
+func UpdateSwapFees(swaps []harmony.Swap) (err error) {
+	data := struct {
+		Profile string
+		Swaps   []harmony.Swap
+	}{
+		Profile: profile,
+		Swaps:   swaps,
+	}
+	var buf bytes.Buffer
+	t, err := template.New("updateSwapFees").Parse(swapFeesQ)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

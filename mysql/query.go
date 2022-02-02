@@ -12,10 +12,15 @@ import (
 
 const (
 	tokenQuery                  = "SELECT address, symbol, name, decimals FROM harmolytics_default.tokens"
+	swapsQuery                  = "SELECT hash, input_token, output_token, input_amount, output_amount, path FROM harmolytics_profile_%s.swaps"
+	ratiosQuery                 = "SELECT liquidity_pool, block_num, reserve_a, reserve_b FROM harmolytics_historic.liquidity_ratios"
+	liquidityPoolQuery          = "SELECT token_a, token_b FROM harmolytics_default.liquidity_pools WHERE address = '%s'"
+	blockQuery                  = "SELECT block_num FROM harmolytics_profile_%s.transactions WHERE hash = '%s'"
 	transactionLogsHashQuery    = "SELECT hash, topics, address, data, log_index FROM harmolytics_profile_%s.transaction_logs WHERE hash = '%s'"
 	transactionLogsTypeQuery    = "SELECT hash, topics, address, data, log_index FROM harmolytics_profile_%s.transaction_logs WHERE topics LIKE '%s%%'"
 	transactionsMethodNameQuery = "SELECT hash, sender, receiver, input, method_signature, unixtime, block_num, gas_amount, gas_price, value, shard_id, to_shard_id FROM harmolytics_profile_%s.transactions WHERE method_signature IN (SELECT signature FROM harmolytics_default.methods WHERE name LIKE '%s') ORDER BY block_num ASC"
 	transactionsLogIdQuery      = "SELECT hash, sender, receiver, input, method_signature, unixtime, block_num, gas_amount, gas_price, value, shard_id, to_shard_id FROM harmolytics_profile_%s.transactions WHERE hash IN (SELECT hash FROM harmolytics_profile_%s.transaction_logs WHERE topics LIKE '%s%%')"
+	transactionHashQuery        = "SELECT hash, sender, receiver, input, method_signature, unixtime, block_num, gas_amount, gas_price, value, shard_id, to_shard_id FROM harmolytics_profile_%s.transactions WHERE hash = '%s'"
 	methodQuery                 = "SELECT signature, name, parameters FROM harmolytics_default.methods WHERE signature = '%s'"
 )
 
@@ -132,6 +137,20 @@ func GetTransactionsByLogId(id string) (txs []harmony.Transaction, err error) {
 	return
 }
 
+func GetTransactionByHash(hash string) (tx harmony.Transaction, err error) {
+	rows, err := db.Query(fmt.Sprintf(transactionHashQuery, profile, hash))
+	defer rows.Close()
+	if err != nil {
+		return harmony.Transaction{}, errors.Wrap(err, 0)
+	}
+	txs, err := getTransactionsFromResult(rows)
+	if err != nil {
+		return
+	}
+	tx = txs[0]
+	return
+}
+
 // GetTransactionLogsByHash returns a list of transaction.Log for a given transaction hash.
 func GetTransactionLogsByHash(txHash string) (logs []harmony.TransactionLog, err error) {
 	rows, err := db.Query(fmt.Sprintf(transactionLogsHashQuery, profile, txHash))
@@ -194,6 +213,115 @@ func GetMethodBySignature(sig string) (m harmony.Method, err error) {
 		return harmony.Method{}, errors.Wrap(err, 0)
 	}
 	m.Parameters = strings.Split(p, ":")
+	return
+}
+
+func GetSwaps() (swaps []harmony.Swap, err error) {
+	rows, err := db.Query(fmt.Sprintf(swapsQuery, profile))
+	defer rows.Close()
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+	for rows.Next() {
+		var s harmony.Swap
+		var tokenA, tokenB, amountA, amountB, path string
+		err = rows.Scan(&s.TxHash, &tokenA, &tokenB, &amountA, &amountB, &path)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		tokenAddress, err := address.New(tokenA)
+		if err != nil {
+			return nil, err
+		}
+		s.InToken = harmony.Token{Address: tokenAddress}
+		tokenAddress, err = address.New(tokenB)
+		if err != nil {
+			return nil, err
+		}
+		s.OutToken = harmony.Token{Address: tokenAddress}
+		s.InAmount = new(big.Int)
+		s.OutAmount = new(big.Int)
+		s.InAmount.SetString(amountA, 10)
+		s.OutAmount.SetString(amountB, 10)
+		for _, p := range strings.Split(path, ":") {
+			lpAddr, err := address.New(p)
+			if err != nil {
+				return nil, err
+			}
+			s.Path = append(s.Path, harmony.LiquidityPool{LpToken: harmony.Token{Address: lpAddr}})
+		}
+		swaps = append(swaps, s)
+	}
+	return
+}
+
+func GetLiquidityPool(lpAddr string) (lp harmony.LiquidityPool, err error) {
+	rows, err := db.Query(fmt.Sprintf(liquidityPoolQuery, lpAddr))
+	defer rows.Close()
+	if err != nil {
+		return harmony.LiquidityPool{}, errors.Wrap(err, 0)
+	}
+	rows.Next()
+	var a, b string
+	err = rows.Scan(&a, &b)
+	if err != nil {
+		return harmony.LiquidityPool{}, errors.Wrap(err, 0)
+	}
+	tokenLP, err := address.New(lpAddr)
+	if err != nil {
+		return
+	}
+	tokenA, err := address.New(a)
+	if err != nil {
+		return
+	}
+	tokenB, err := address.New(b)
+	if err != nil {
+		return
+	}
+	lp.LpToken.Address = tokenLP
+	lp.TokenA.Address = tokenA
+	lp.TokenB.Address = tokenB
+	return
+}
+
+func GetRatios() (ratios []harmony.HistoricLiquidityRatio, err error) {
+	rows, err := db.Query(ratiosQuery)
+	defer rows.Close()
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+	for rows.Next() {
+		var r harmony.HistoricLiquidityRatio
+		var lp, amountA, amountB string
+		err = rows.Scan(&lp, &r.BlockNum, &amountA, &amountB)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		r.LP, err = GetLiquidityPool(lp)
+		if err != nil {
+			return
+		}
+		r.ReserveA = new(big.Int)
+		r.ReserveB = new(big.Int)
+		r.ReserveA.SetString(amountA, 10)
+		r.ReserveB.SetString(amountB, 10)
+		ratios = append(ratios, r)
+	}
+	return
+}
+
+func GetBlockByTx(tx string) (block uint64, err error) {
+	rows, err := db.Query(fmt.Sprintf(blockQuery, profile, tx))
+	defer rows.Close()
+	if err != nil {
+		return 0, errors.Wrap(err, 0)
+	}
+	rows.Next()
+	err = rows.Scan(&block)
+	if err != nil {
+		return 0, errors.Wrap(err, 0)
+	}
 	return
 }
 

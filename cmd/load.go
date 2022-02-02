@@ -160,7 +160,7 @@ var loadLiquidityRatiosCmd = &cobra.Command{
 			s, err := uniswapV2.DecodeSwap(tx)
 			log.CheckErr(err, log.PanicLevel)
 			for _, pool := range s.Path {
-				lookups = append(lookups, harmony.HistoricLiquidityRatio{LP: pool, BlockNum: tx.BlockNum})
+				lookups = append(lookups, harmony.HistoricLiquidityRatio{LP: pool, BlockNum: tx.BlockNum - 1})
 			}
 		}
 		wg := sync.WaitGroup{}
@@ -168,13 +168,12 @@ var loadLiquidityRatiosCmd = &cobra.Command{
 		ch := make(chan harmony.HistoricLiquidityRatio, len(lookups))
 		for _, lk := range lookups {
 			go func(l harmony.HistoricLiquidityRatio) {
-				r, err := uniswapV2.GetLiquidityRatio(l.LP, l.BlockNum)
+				l, err = uniswapV2.GetLiquidityRatio(l.LP, l.BlockNum)
 				if err != nil {
 					fmt.Println(err.(*errors.Error).ErrorStack())
 					wg.Done()
 					panic(err)
 				}
-				l.Ratio = r
 				ch <- l
 				wg.Done()
 			}(lk)

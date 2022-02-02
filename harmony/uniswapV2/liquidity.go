@@ -7,7 +7,6 @@ import (
 	"harmolytics/harmony/hex"
 	"harmolytics/harmony/token"
 	"harmolytics/harmony/transaction"
-	"math/big"
 	"sort"
 )
 
@@ -20,8 +19,7 @@ const (
 )
 
 // GetLiquidityRatio returns the ratio TokenB/TokenA as in: 1 TokenA = r TokenB
-func GetLiquidityRatio(lp harmony.LiquidityPool, blockNum uint64) (r *big.Rat, err error) {
-	r = new(big.Rat)
+func GetLiquidityRatio(lp harmony.LiquidityPool, blockNum uint64) (r harmony.HistoricLiquidityRatio, err error) {
 	AmountA, err := token.GetBalanceOf(lp.LpToken.Address, lp.TokenA, blockNum)
 	if err != nil {
 		return
@@ -30,7 +28,10 @@ func GetLiquidityRatio(lp harmony.LiquidityPool, blockNum uint64) (r *big.Rat, e
 	if err != nil {
 		return
 	}
-	r.SetFrac(AmountB, AmountA)
+	r.BlockNum = blockNum
+	r.LP = lp
+	r.ReserveA = AmountA
+	r.ReserveB = AmountB
 	return
 }
 

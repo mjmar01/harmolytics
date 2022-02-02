@@ -10,9 +10,11 @@ import (
 
 const (
 	swapEvent    = "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
-	swapEth      = "fb3bdb41"
-	swapExEth    = "7ff36ab5"
+	swapEthExTk  = "fb3bdb41"
+	swapExEthTk  = "7ff36ab5"
 	swapExEthSup = "b6f9de95"
+	swapTkExEth  = "4a25d94a"
+	swapTkExTk   = "8803dbee"
 )
 
 func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
@@ -83,9 +85,86 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 	return
 }
 
+func AnalyzeFees(swap *harmony.Swap, reserves []harmony.HistoricLiquidityRatio, tx harmony.Transaction) (err error) {
+	side := getVariableSide(tx.Method.Signature)
+	pathOffset := getPathOffset(tx.Method.Signature)
+	tokenPath, err := hex.DecodeArray(tx.Input[8:], pathOffset)
+	if side == 1 {
+		swap.FeeToken = swap.InToken.Address.OneAddress
+		feeAmount := swap.OutAmount
+		for i := len(tokenPath) - 1; i > 0; i-- {
+			var reserveIn, reserveOut *big.Int
+			s := hexEncoding.EncodeToString(tokenPath[i])[24:]
+			a := hexEncoding.EncodeToString(reserves[i-1].LP.TokenA.Address.EthAddress.Bytes())
+			b := hexEncoding.EncodeToString(reserves[i-1].LP.TokenB.Address.EthAddress.Bytes())
+			if s == a {
+				reserveIn = reserves[i-1].ReserveB
+				reserveOut = reserves[i-1].ReserveA
+			} else if s == b {
+				reserveIn = reserves[i-1].ReserveA
+				reserveOut = reserves[i-1].ReserveB
+			}
+			feeAmount = getAmountIn(feeAmount, reserveIn, reserveOut)
+		}
+		feeAmount.Sub(swap.InAmount, feeAmount)
+		swap.FeeAmount = feeAmount
+	}
+	if side == 2 {
+		swap.FeeToken = swap.OutToken.Address.OneAddress
+		feeAmount := swap.InAmount
+		for i := 0; i < len(tokenPath)-1; i++ {
+			var reserveIn, reserveOut *big.Int
+			s := hexEncoding.EncodeToString(tokenPath[i])[24:]
+			a := hexEncoding.EncodeToString(reserves[i].LP.TokenA.Address.EthAddress.Bytes())
+			b := hexEncoding.EncodeToString(reserves[i].LP.TokenB.Address.EthAddress.Bytes())
+			if s == a {
+				reserveIn = reserves[i].ReserveA
+				reserveOut = reserves[i].ReserveB
+			} else if s == b {
+				reserveIn = reserves[i].ReserveB
+				reserveOut = reserves[i].ReserveA
+			}
+			feeAmount = getAmountOut(feeAmount, reserveIn, reserveOut)
+		}
+		feeAmount.Sub(feeAmount, swap.OutAmount)
+		swap.FeeAmount = feeAmount
+	}
+	return
+}
+
+func getAmountIn(amountOut, reserveIn, reserveOut *big.Int) *big.Int {
+	numerator := new(big.Int)
+	numerator.Mul(reserveIn, amountOut)
+	denominator := new(big.Int)
+	denominator.Sub(reserveOut, amountOut)
+	result := new(big.Int)
+	result.Div(numerator, denominator)
+	result.Add(result, big.NewInt(1))
+	return result
+}
+
+func getAmountOut(amountIn, reserveIn, reserveOut *big.Int) *big.Int {
+	numerator := new(big.Int)
+	numerator.Mul(amountIn, reserveOut)
+	denominator := new(big.Int)
+	denominator.Add(reserveIn, amountIn)
+	result := new(big.Int)
+	result.Div(numerator, denominator)
+	return result
+}
+
 func getPathOffset(methodSig string) int {
 	switch methodSig {
-	case swapEth, swapExEth, swapExEthSup:
+	case swapEthExTk, swapExEthTk, swapExEthSup:
+		return 1
+	default:
+		return 2
+	}
+}
+
+func getVariableSide(methodSig string) int {
+	switch methodSig {
+	case swapEthExTk, swapTkExEth, swapTkExTk:
 		return 1
 	default:
 		return 2

@@ -2,11 +2,13 @@
 REPLACE INTO harmolytics_historic.liquidity_ratios (
     liquidity_pool,
     block_num,
-    ratio
+    reserve_a,
+    reserve_b
 )
 VALUES (
     '{{.LP.LpToken.Address.OneAddress}}',
     {{.BlockNum}},
-    {{.Ratio}}
+    {{.ReserveA}},
+    {{.ReserveB}}
 );
 {{end}}

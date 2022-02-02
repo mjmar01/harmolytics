@@ -84,6 +84,8 @@ type Swap struct {
 	InAmount  *big.Int
 	OutAmount *big.Int
 	Path      []LiquidityPool
+	FeeToken  string
+	FeeAmount *big.Int
 }
 
 type LiquidityPool struct {
@@ -108,8 +110,9 @@ type LiquidityAction struct {
 
 type HistoricLiquidityRatio struct {
 	LP       LiquidityPool
-	Ratio    *big.Rat
 	BlockNum uint64
+	ReserveA *big.Int
+	ReserveB *big.Int
 }
 
 type Claim struct {

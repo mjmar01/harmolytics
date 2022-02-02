@@ -48,7 +48,8 @@ create table if not exists harmolytics_historic.liquidity_ratios
 (
     liquidity_pool char(42)     not null,
     block_num      int unsigned not null,
-    ratio          double       not null,
+    reserve_a      decimal(65)  not null,
+    reserve_b      decimal(65)  not null,
     constraint liquidity_ratios_pk
         primary key (liquidity_pool, block_num),
     constraint liquidity_ratios_liquidity_pool_address_fk
@@ -97,6 +98,8 @@ create table if not exists harmolytics_profile_{{.}}.swaps
     output_token  char(42)    not null,
     output_amount decimal(65) not null,
     path          text        not null,
+    fee_token     char(42)    null,
+    fee_amount    decimal(65) null,
     constraint swaps_pk
         primary key (hash),
     constraint swaps_hash_hash_fk
