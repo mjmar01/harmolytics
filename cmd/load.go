@@ -40,12 +40,15 @@ var loadCmd = &cobra.Command{
 		err = initConfigVars()
 		log.CheckErr(err, log.PanicLevel)
 		log.SetLogLevel(config.LogLevel)
-		rpc.SetRpcUrl(config.RpcUrl, config.HistoricRpcUrl)
+		rpc.InitRpc(config.RpcUrl, config.HistoricRpcUrl)
 		_, err = mysql.ConnectDatabase(config.DB.User, config.DB.Password, config.DB.Host, config.DB.Port, config.DB.Profile, cryptKey)
 		log.CheckErr(err, log.PanicLevel)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		rpc.CloseRpc()
 	},
 }
 
@@ -82,25 +85,14 @@ var loadTokensCmd = &cobra.Command{
 		addrs, err := mysql.GetStringsByQuery(fmt.Sprintf(transferQuery, config.DB.Profile, transferEvent))
 		log.CheckErr(err, log.PanicLevel)
 		var tokens []harmony.Token
-		wg := sync.WaitGroup{}
-		wg.Add(len(addrs))
-		ch := make(chan harmony.Token, len(addrs))
 		for _, addr := range addrs {
-			go func(addr string) {
-				a, err := addressPkg.New(addr)
-				log.CheckErr(err, log.PanicLevel)
-				token, err := token.GetToken(a)
-				ch <- token
-				log.CheckErr(err, log.PanicLevel)
-			}(addr)
-			wg.Done()
-		}
-		wg.Wait()
-		for i := 0; i < len(addrs); i++ {
-			tk := <-ch
-			if tk.Name != "" {
-				tokens = append(tokens, tk)
+			a, err := addressPkg.New(addr)
+			log.CheckErr(err, log.PanicLevel)
+			token, err := token.GetToken(a)
+			if token.Name != "" {
+				tokens = append(tokens, token)
 			}
+			log.CheckErr(err, log.PanicLevel)
 		}
 		log.Info(fmt.Sprintf("Found %d distinct tokens", len(tokens)))
 		log.Done()
@@ -163,25 +155,13 @@ var loadLiquidityRatiosCmd = &cobra.Command{
 				lookups = append(lookups, harmony.HistoricLiquidityRatio{LP: pool, BlockNum: tx.BlockNum - 1})
 			}
 		}
-		wg := sync.WaitGroup{}
-		wg.Add(len(lookups))
-		ch := make(chan harmony.HistoricLiquidityRatio, len(lookups))
-		for _, lk := range lookups {
-			go func(l harmony.HistoricLiquidityRatio) {
-				l, err = uniswapV2.GetLiquidityRatio(l.LP, l.BlockNum)
-				if err != nil {
-					fmt.Println(err.(*errors.Error).ErrorStack())
-					wg.Done()
-					panic(err)
-				}
-				ch <- l
-				wg.Done()
-			}(lk)
-		}
-		wg.Wait()
 		var ratios []harmony.HistoricLiquidityRatio
-		for i := 0; i < len(lookups); i++ {
-			lk := <-ch
+		for _, lk := range lookups {
+			lk, err = uniswapV2.GetLiquidityRatio(lk.LP, lk.BlockNum)
+			if err != nil {
+				fmt.Println(err.(*errors.Error).ErrorStack())
+				panic(err)
+			}
 			ratios = append(ratios, lk)
 		}
 		err = mysql.SetLiquidityRatios(ratios)

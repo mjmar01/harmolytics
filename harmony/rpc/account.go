@@ -18,7 +18,7 @@ const (
 func GetTransactionCount(address harmony.Address, txType string) (c int, err error) {
 	// Get transaction count
 	params := []interface{}{address.OneAddress, txType}
-	result, err := safeRpcCall(transactionCount, params)
+	result, err := rpcCall(transactionCount, params)
 	if err != nil {
 		return
 	}
@@ -44,7 +44,7 @@ func GetTransactionHistory(address string, pageIndex, pageSize int, txType strin
 		FullTx:    true,
 		TxType:    txType,
 	}
-	result, err := rawSafeRpcCall(transactionHistory, []interface{}{params})
+	result, err := rawRpcCall(transactionHistory, []interface{}{params})
 	if err != nil {
 		return
 	}

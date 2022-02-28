@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-errors/errors"
+	"github.com/gorilla/websocket"
 	"harmolytics/harmony"
 	"harmolytics/harmony/address"
 	"math/big"
@@ -19,7 +20,7 @@ const (
 func GetTransaction(hash string) (tx harmony.Transaction, err error) {
 	// Get transaction info
 	params := []interface{}{hash}
-	result, err := rawSafeRpcCall(transactionByHash, params)
+	result, err := rawRpcCall(transactionByHash, params)
 	if err != nil {
 		return
 	}
@@ -73,7 +74,7 @@ func GetTransaction(hash string) (tx harmony.Transaction, err error) {
 func GetTransactionReceipt(hash string) (status int, logs []harmony.TransactionLog, err error) {
 	// Get transaction receipt
 	params := []interface{}{hash}
-	result, err := rawSafeRpcCall(transactionReceipt, params)
+	result, err := rawRpcCall(transactionReceipt, params)
 	if err != nil {
 		return
 	}
@@ -103,6 +104,70 @@ func GetTransactionReceipt(hash string) (status int, logs []harmony.TransactionL
 			Topics:   l.Topics,
 			Data:     l.Data,
 		})
+	}
+	return
+}
+
+// GetTransactionReceipts is functionally identical to GetTransactionReceipt except, it is optimised for a large number
+// of requests
+func GetTransactionReceipts(hashs []string) (txs []harmony.Transaction, err error) {
+	for _, hash := range hashs {
+		body, err := json.Marshal(map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      queryId,
+			"method":  transactionReceipt,
+			"params":  []interface{}{hash},
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		queryId++
+		err = conn.WriteMessage(websocket.TextMessage, body)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+	}
+	// Get transaction receipt
+	for i := 0; i < len(hashs); i++ {
+		var logs []harmony.TransactionLog
+		var tx harmony.Transaction
+		_, result, err := conn.ReadMessage()
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		// Read result
+		var txReceipt transactionReceiptJson
+		err = json.Unmarshal(result, &txReceipt)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		if txReceipt.Result.Status == harmony.TxFailed {
+			continue
+		}
+		// Convert transactionReceiptJson to []harmony.TransactionLog
+		for _, l := range txReceipt.Result.Logs {
+			// Convert data formats
+			index, err := hexutil.DecodeUint64(l.LogIndex)
+			if err != nil {
+				return nil, errors.Wrap(err, 0)
+			}
+			addr, err := address.New(l.Address)
+			if err != nil {
+				return nil, err
+			}
+			// Add log
+			logs = append(logs, harmony.TransactionLog{
+				TxHash:   txReceipt.Result.TxHash,
+				LogIndex: int(index),
+				Address:  addr,
+				Topics:   l.Topics,
+				Data:     l.Data,
+			})
+		}
+		tx.Logs = logs
+		tx.TxHash = txReceipt.Result.TxHash
+
+		txs = append(txs, tx)
 	}
 	return
 }

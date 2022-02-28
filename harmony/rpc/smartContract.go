@@ -17,7 +17,7 @@ func SimpleCall(to, data string) (r string, err error) {
 		},
 		"latest",
 	}
-	result, err := safeRpcCall(contractCall, params)
+	result, err := rpcCall(contractCall, params)
 	if err != nil {
 		return
 	}
@@ -38,7 +38,7 @@ func HistoricCall(to, data string, blockNum uint64) (r string, err error) {
 		},
 		blockNum,
 	}
-	result, err := historicSafeRpcCall(contractCall, params)
+	result, err := historicRpcCall(contractCall, params)
 	if err != nil {
 		return
 	}

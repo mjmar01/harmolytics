@@ -252,6 +252,7 @@ github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5m
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 h1:EGx4pi6eqNxGaHF6qqu48+N2wcFQ5qg5FXgOdqsJ5d8=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/graph-gophers/graphql-go v0.0.0-20201113091052-beb923fada29/go.mod h1:9CQHMSxwO4MprSdzoIEobiHpoLtHm77vfxsvsIN5Vuc=
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
@@ -374,10 +375,6 @@ github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh
 github.com/mitchellh/mapstructure v1.4.1 h1:CpVNEelQCZBooIPDn+AR3NpivK/TIKU8bDxdASFVQag=
 github.com/mitchellh/mapstructure v1.4.1/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/pointerstructure v1.2.0/go.mod h1:BRAsLI5zgXmw97Lf6s25bs8ohIXc3tViBH44KcwB2g4=
-github.com/mjmar01/cli-log v0.0.0-20211205013558-989711358860 h1:8FUi+QcuYEyaXcZhwduSC5hniPrKAa2wOTiY+sOzKnY=
-github.com/mjmar01/cli-log v0.0.0-20211205013558-989711358860/go.mod h1:GrQWDtwHfWj4nGMsFGNvgcN0VHSNbrRnfwpD1ZuSIyM=
-github.com/mjmar01/cli-log v0.0.0-20211205042020-9bb68d33f03b h1:u0rr1bDN4bcUmMXHUxnRl5Gn8J4z7KfeZV74HEKF7K4=
-github.com/mjmar01/cli-log v0.0.0-20211205042020-9bb68d33f03b/go.mod h1:qE61l6gGE4rJ8g6UJU5xOSGFQcUjdHGPEsZrg+x0Bok=
 github.com/mjmar01/cli-log v0.0.0-20211207142244-8871f3db56cc h1:Go/bZOSOsx8o0j6+yaPN9FN15SdIDaO1IH9ThTJYt3o=
 github.com/mjmar01/cli-log v0.0.0-20211207142244-8871f3db56cc/go.mod h1:VLpIudKwIKpsIp4pd7DEC281HI8Nbx9gsiZyI8+f/so=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=

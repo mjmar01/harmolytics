@@ -47,6 +47,7 @@ type transactionReceiptJson struct {
 		Logs   []transactionLogJson `json:"logs"`
 		Status int                  `json:"status"`
 		From   string               `json:"from"`
+		TxHash string               `json:"transactionHash"`
 	} `json:"result"`
 }
 

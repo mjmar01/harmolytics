@@ -7,6 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.12
 	github.com/go-errors/errors v1.4.1
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mjmar01/cli-log v0.0.0-20211207142244-8871f3db56cc
 	github.com/spf13/cobra v1.2.1
