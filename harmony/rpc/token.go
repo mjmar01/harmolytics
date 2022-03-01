@@ -52,7 +52,7 @@ func GetTokens(addrs []harmony.Address) (ts []harmony.Token, err error) {
 
 	// Get the rest
 	start = queryId
-	for i, _ := range ts {
+	for i := range ts {
 		body := newRpcBody(contractCall)
 		body.Params = params(ts[i].Address, getNameMethod)
 		err = conn.WriteJSON(body)
@@ -73,6 +73,9 @@ func GetTokens(addrs []harmony.Address) (ts []harmony.Token, err error) {
 			return nil, errors.Wrap(err, 0)
 		}
 		err = json.Unmarshal(ret, &reply)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
 		idx := reply.Id - start
 		if idx&1 == 0 {
 			name, err := hex.DecodeString(reply.Result, 0)

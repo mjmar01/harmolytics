@@ -32,7 +32,6 @@ func GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Transaction, e
 		for _, tx := range transactions {
 			for i2, receipt := range receipts {
 				if tx.TxHash == receipt.TxHash {
-
 					tx.Logs = receipt.Logs
 					txs = append(txs, tx)
 					receipts = append(receipts[:i2], receipts[i2+1:]...)

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-errors/errors"
-	"github.com/gorilla/websocket"
 	"harmolytics/harmony"
 	"harmolytics/harmony/address"
 	"math/big"
@@ -112,17 +111,9 @@ func GetTransactionReceipt(hash string) (status int, logs []harmony.TransactionL
 // of requests
 func GetTransactionReceipts(hashs []string) (txs []harmony.Transaction, err error) {
 	for _, hash := range hashs {
-		body, err := json.Marshal(map[string]interface{}{
-			"jsonrpc": "2.0",
-			"id":      queryId,
-			"method":  transactionReceipt,
-			"params":  []interface{}{hash},
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, 0)
-		}
-		queryId++
-		err = conn.WriteMessage(websocket.TextMessage, body)
+		body := newRpcBody(transactionReceipt)
+		body.Params = []interface{}{hash}
+		err = conn.WriteJSON(body)
 		if err != nil {
 			return nil, errors.Wrap(err, 0)
 		}
@@ -144,6 +135,7 @@ func GetTransactionReceipts(hashs []string) (txs []harmony.Transaction, err erro
 		if txReceipt.Result.Status == harmony.TxFailed {
 			continue
 		}
+
 		// Convert transactionReceiptJson to []harmony.TransactionLog
 		for _, l := range txReceipt.Result.Logs {
 			// Convert data formats
