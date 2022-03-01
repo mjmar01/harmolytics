@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/go-errors/errors"
 	"github.com/mjmar01/cli-log/log"
 	"github.com/spf13/cobra"
 	"harmolytics/harmony"
@@ -40,7 +39,8 @@ var loadCmd = &cobra.Command{
 		err = initConfigVars()
 		log.CheckErr(err, log.PanicLevel)
 		log.SetLogLevel(config.LogLevel)
-		rpc.InitRpc(config.RpcUrl, config.HistoricRpcUrl)
+		err = rpc.InitRpc(config.RpcUrl, config.HistoricRpcUrl)
+		log.CheckErr(err, log.PanicLevel)
 		_, err = mysql.ConnectDatabase(config.DB.User, config.DB.Password, config.DB.Host, config.DB.Port, config.DB.Profile, cryptKey)
 		log.CheckErr(err, log.PanicLevel)
 	},
@@ -146,15 +146,8 @@ var loadLiquidityRatiosCmd = &cobra.Command{
 				lookups = append(lookups, harmony.HistoricLiquidityRatio{LP: pool, BlockNum: tx.BlockNum - 1})
 			}
 		}
-		var ratios []harmony.HistoricLiquidityRatio
-		for _, lk := range lookups {
-			lk, err = uniswapV2.GetLiquidityRatio(lk.LP, lk.BlockNum)
-			if err != nil {
-				fmt.Println(err.(*errors.Error).ErrorStack())
-				panic(err)
-			}
-			ratios = append(ratios, lk)
-		}
+		ratios, err := uniswapV2.GetLiquidityRatios(lookups)
+		log.CheckErr(err, log.PanicLevel)
 		err = mysql.SetLiquidityRatios(ratios)
 		log.CheckErr(err, log.PanicLevel)
 	},

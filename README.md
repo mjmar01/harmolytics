@@ -8,7 +8,6 @@ This project is very much so build by me for me. Right now it doesn't support an
 Nonetheless, if you want to use it or build upon it feel free to test it. You will need a MySQL instance as a backend service.
 
 ## Basic start
-> The latest commit changed the way to communicate with the blockchain. This is to optimise the load transactions function but other functions will be slower by default. This will be fixed in a later update.
 ```
 ./harmolytics config database --db-host 127.0.0.1 --db-port 3306 --db-user <user>
 ./harmolytics sql init

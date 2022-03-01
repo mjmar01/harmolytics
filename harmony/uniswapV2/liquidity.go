@@ -5,7 +5,7 @@ import (
 	"harmolytics/harmony"
 	"harmolytics/harmony/address"
 	"harmolytics/harmony/hex"
-	"harmolytics/harmony/token"
+	"harmolytics/harmony/rpc"
 	"harmolytics/harmony/transaction"
 	"sort"
 )
@@ -18,20 +18,30 @@ const (
 	wone               = "one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"
 )
 
-// GetLiquidityRatio returns the ratio TokenB/TokenA as in: 1 TokenA = r TokenB
-func GetLiquidityRatio(lp harmony.LiquidityPool, blockNum uint64) (r harmony.HistoricLiquidityRatio, err error) {
-	AmountA, err := token.GetBalanceOf(lp.LpToken.Address, lp.TokenA, blockNum)
-	if err != nil {
-		return
+func GetLiquidityRatios(lps []harmony.HistoricLiquidityRatio) (rs []harmony.HistoricLiquidityRatio, err error) {
+	var addrs []harmony.Address
+	var tokens []harmony.Token
+	var blockNumsInput []uint64
+	for i := 0; i < len(lps); i++ {
+		addrs = append(addrs, lps[i].LP.LpToken.Address)
+		addrs = append(addrs, lps[i].LP.LpToken.Address)
+		tokens = append(tokens, lps[i].LP.TokenA)
+		tokens = append(tokens, lps[i].LP.TokenB)
+		blockNumsInput = append(blockNumsInput, lps[i].BlockNum)
+		blockNumsInput = append(blockNumsInput, lps[i].BlockNum)
 	}
-	AmountB, err := token.GetBalanceOf(lp.LpToken.Address, lp.TokenB, blockNum)
+	balances, err := rpc.GetBalances(addrs, tokens, blockNumsInput)
 	if err != nil {
-		return
+		return nil, err
 	}
-	r.BlockNum = blockNum
-	r.LP = lp
-	r.ReserveA = AmountA
-	r.ReserveB = AmountB
+	for i := 0; i < len(lps)*2; i += 2 {
+		rs = append(rs, harmony.HistoricLiquidityRatio{
+			LP:       lps[i/2].LP,
+			BlockNum: lps[i/2].BlockNum,
+			ReserveA: balances[i],
+			ReserveB: balances[i+1],
+		})
+	}
 	return
 }
 
@@ -105,7 +115,7 @@ func DecodeLiquidity(tx harmony.Transaction) (lps []harmony.LiquidityPool, err e
 		return
 	}
 	var pathTokens []harmony.Token
-	for i, _ := range path {
+	for i := range path {
 		addr, err := hex.DecodeAddress(hexEncoding.EncodeToString(path[i]), 0)
 		if err != nil {
 			return nil, err
