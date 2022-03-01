@@ -13,6 +13,27 @@ var (
 	queryId      = 1
 )
 
+type rpcBody struct {
+	RpcVersion string        `json:"jsonrpc"`
+	Id         int           `json:"id"`
+	Method     string        `json:"method"`
+	Params     []interface{} `json:"params"`
+}
+
+// When the result explicitly is a string
+type rpcReplyS struct {
+	RpcVersion string `json:"jsonrpc"`
+	Id         int    `json:"id"`
+	Result     string `json:"result"`
+}
+
+// For generic results
+type rpcReplyG struct {
+	RpcVersion string      `json:"jsonrpc"`
+	Id         int         `json:"id"`
+	Result     interface{} `json:"result"`
+}
+
 func InitRpc(url, historicUrl string) (err error) {
 	conn, _, err = websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
@@ -27,6 +48,16 @@ func InitRpc(url, historicUrl string) (err error) {
 func CloseRpc() {
 	conn.Close()
 	historicConn.Close()
+}
+
+func newRpcBody(method string) rpcBody {
+	body := rpcBody{
+		RpcVersion: "2.0",
+		Id:         queryId,
+		Method:     method,
+	}
+	queryId++
+	return body
 }
 
 func rpcCall(method string, params interface{}) (result interface{}, err error) {

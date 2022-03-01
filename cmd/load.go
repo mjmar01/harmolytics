@@ -84,16 +84,7 @@ var loadTokensCmd = &cobra.Command{
 		log.Task("Loading token information", log.InfoLevel)
 		addrs, err := mysql.GetStringsByQuery(fmt.Sprintf(transferQuery, config.DB.Profile, transferEvent))
 		log.CheckErr(err, log.PanicLevel)
-		var tokens []harmony.Token
-		for _, addr := range addrs {
-			a, err := addressPkg.New(addr)
-			log.CheckErr(err, log.PanicLevel)
-			token, err := token.GetToken(a)
-			if token.Name != "" {
-				tokens = append(tokens, token)
-			}
-			log.CheckErr(err, log.PanicLevel)
-		}
+		tokens, err := token.GetTokens(addrs)
 		log.Info(fmt.Sprintf("Found %d distinct tokens", len(tokens)))
 		log.Done()
 		err = mysql.SetTokens(tokens)

@@ -3,58 +3,26 @@ package token
 
 import (
 	"harmolytics/harmony"
+	"harmolytics/harmony/address"
 	"harmolytics/harmony/hex"
 	"harmolytics/harmony/rpc"
 	"math/big"
 )
 
 const (
-	getNameMethod     = "0x06fdde03"
-	getSymbolMethod   = "0x95d89b41"
-	getDecimalsMethod = "0x313ce567"
-	getBalanceMethod  = "0x70a08231"
+	getBalanceMethod = "0x70a08231"
 )
 
-// GetToken takes a harmony.Address and returns a harmony.Token or an empty Token if the address isn't an HRC-20 token
-func GetToken(a harmony.Address) (t harmony.Token, err error) {
-	// Check if this address is an NFT
-	rawDecimals, err := rpc.SimpleCall(a.EthAddress.Hex(), getDecimalsMethod)
-	if err != nil {
-		return
+func GetTokens(addrs []string) (ts []harmony.Token, err error) {
+	var inputs []harmony.Address
+	for _, addr := range addrs {
+		a, err := address.New(addr)
+		if err != nil {
+			return nil, err
+		}
+		inputs = append(inputs, a)
 	}
-	if rawDecimals == "0x" {
-		// This isn't a token. It's an NFT!
-		return harmony.Token{}, nil
-	}
-	// Get token data from contract
-	rawName, err := rpc.SimpleCall(a.EthAddress.Hex(), getNameMethod)
-	if err != nil {
-		return
-	}
-	rawSymbol, err := rpc.SimpleCall(a.EthAddress.Hex(), getSymbolMethod)
-	if err != nil {
-		return
-	}
-	// Read return values
-	decimals, err := hex.DecodeInt(rawDecimals, 0)
-	if err != nil {
-		return
-	}
-	name, err := hex.DecodeString(rawName, 0)
-	if err != nil {
-		return
-	}
-	symbol, err := hex.DecodeString(rawSymbol, 0)
-	if err != nil {
-		return
-	}
-	// Fill token
-	t = harmony.Token{
-		Address:  a,
-		Name:     name,
-		Symbol:   symbol,
-		Decimals: int(decimals.Int64()),
-	}
+	ts, err = rpc.GetTokens(inputs)
 	return
 }
 
