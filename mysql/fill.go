@@ -8,12 +8,6 @@ import (
 	"text/template"
 )
 
-//go:embed queries/fill_transactions.tmpl
-var transactionsQ string
-
-//go:embed queries/fill_tokens.tmpl
-var tokensQ string
-
 //go:embed queries/fill_methods.tmpl
 var methodsQ string
 
@@ -29,48 +23,8 @@ var liquidityPoolsQ string
 //go:embed queries/fill_liquidity_ratios.tmpl
 var liquidityRatiosQ string
 
-//go:embed queries/fill_tokenTransfers.tmpl
-var tokenTransfersQ string
-
 //go:embed queries/fill_fees.tmpl
 var swapFeesQ string
-
-// SetTransactions takes a list of transaction.Transaction and saves those to the tables transactions and transaction_logs.
-func SetTransactions(transactions []harmony.Transaction) (err error) {
-	data := struct {
-		Profile      string
-		Transactions []harmony.Transaction
-	}{
-		Profile:      profile,
-		Transactions: transactions,
-	}
-	var buf bytes.Buffer
-	t, err := template.New("fillTransaction").Parse(transactionsQ)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	err = t.Execute(&buf, data)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	err = RunTemplate(buf.String())
-	return
-}
-
-// SetTokens takes a list of token.Token and saves those to the table tokens.
-func SetTokens(tokens []harmony.Token) (err error) {
-	var buf bytes.Buffer
-	t, err := template.New("fillTokens").Parse(tokensQ)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	err = t.Execute(&buf, tokens)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	err = RunTemplate(buf.String())
-	return
-}
 
 func SetMethods(methods []harmony.Method) (err error) {
 	var buf bytes.Buffer
@@ -149,27 +103,6 @@ func SetLiquidityRatios(ratios []harmony.HistoricLiquidityRatio) (err error) {
 		return errors.Wrap(err, 0)
 	}
 	err = t.Execute(&buf, ratios)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	err = RunTemplate(buf.String())
-	return
-}
-
-func SetTokenTransfers(transfers []harmony.TokenTransaction) (err error) {
-	data := struct {
-		Profile   string
-		Transfers []harmony.TokenTransaction
-	}{
-		Profile:   profile,
-		Transfers: transfers,
-	}
-	var buf bytes.Buffer
-	t, err := template.New("fillTokenTransfers").Parse(tokenTransfersQ)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	err = t.Execute(&buf, data)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

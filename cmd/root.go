@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/go-errors/errors"
-	"github.com/mitchellh/mapstructure"
 	"github.com/mjmar01/cli-log/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -99,11 +98,6 @@ func initConfigVars() (err error) {
 	config.DB.Password = viper.GetString(PasswordParam)
 	config.RpcUrl = viper.GetString(RpcUrlParam)
 	config.HistoricRpcUrl = viper.GetString(HistoricRpcUrlParam)
-	opt := viperPkg.DecoderConfigOption(func(decoderConfig *mapstructure.DecoderConfig) { decoderConfig.TagName = "yaml" })
-	err = viper.UnmarshalKey(KnownAddressesParam, &config.KnownInfo.Addrs, opt)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
 	return
 }
 

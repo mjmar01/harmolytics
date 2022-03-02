@@ -88,17 +88,14 @@ type Swap struct {
 	FeeAmount *big.Int
 }
 
-type LiquidityPool struct {
-	TokenA  Token
-	TokenB  Token
-	LpToken Token
+// Claim contains a decoded MasterChef style claim of Tokens
+type Claim struct {
+	TxHash string
+	Token  Token
+	Amount *big.Int
 }
 
-const (
-	AddLiquidity    = "add"
-	RemoveLiquidity = "rem"
-)
-
+// LiquidityAction contains the addition or removal of tokens to a LiquidityPool
 type LiquidityAction struct {
 	TxHash    string
 	LP        LiquidityPool
@@ -108,18 +105,28 @@ type LiquidityAction struct {
 	Direction string
 }
 
+//</editor-fold>
+
+//<editor-fold desc=LP related types>
+
+const (
+	AddLiquidity    = "add"
+	RemoveLiquidity = "rem"
+)
+
+// LiquidityPool is an abstract representation of an LP contract containing the Token itself as well as the 'contained' Tokens
+type LiquidityPool struct {
+	TokenA  Token
+	TokenB  Token
+	LpToken Token
+}
+
+// HistoricLiquidityRatio contains the liquidity reserves of a pool at a given block
 type HistoricLiquidityRatio struct {
 	LP       LiquidityPool
 	BlockNum uint64
 	ReserveA *big.Int
 	ReserveB *big.Int
-}
-
-type Claim struct {
-	TxHash string
-	Token  Token
-	Amount *big.Int
-	PoolId int
 }
 
 //</editor-fold>

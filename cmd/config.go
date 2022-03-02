@@ -40,7 +40,6 @@ var config = struct {
 	DB             DbSubConfig
 	RpcUrl         string
 	HistoricRpcUrl string
-	KnownInfo      mysql.KnownInfo `yaml:"known-addresses"`
 }{}
 
 var configCmd = &cobra.Command{

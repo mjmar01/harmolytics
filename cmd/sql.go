@@ -40,8 +40,6 @@ var sqlInitCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := mysql.InitSchema(overwriteProfile)
 		log.CheckErr(err, log.PanicLevel)
-		err = mysql.AddKnown(config.KnownInfo)
-		log.CheckErr(err, log.PanicLevel)
 	},
 }
 
