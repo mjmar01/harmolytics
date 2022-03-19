@@ -12,77 +12,11 @@
 #  6 NONE
 verbosity: 1
 # Harmony RPC API to use
-rpc-url: https://api.harmony.one
-historic-rpc-url: https://a.api.s0.t.hmny.io
+rpc-url: wss://ws.s0.t.hmny.io
+historic-rpc-url: wss://a.ws.s0.t.hmny.io
 
 ## Database
 profile: default
 db-host: 127.0.0.1
 db-port: 3306
 db-user: ~
-db-password: ~
-
-## Known Info
-# Known Addresses
-#known-addresses:
-#  # Wallets
-#  - one-addr: one1wx6p8kjucu5llqz79h9pmn0qf55772m2d2xt26
-#    type: exchange
-#    name: binance
-#
-#  # Lotteries
-#  - one-addr: one1yzlxgfnzsephm69q7m0exd742d9xzerscmh2u9
-#    type: lottery
-#    name: one degen l
-#  - one-addr: one10vz76uyyqpqsa8ecnfu8gevs6gdr35sq9guajy
-#    type: lottery
-#    name: one degen m
-#  - one-addr: one1parjgd8lrdq5mvf0mwlf0rmmzh7ktxpzavaqdt
-#    type: lottery
-#    name: one degen s
-#  - one-addr: one1juhnlzv6ju8qhgxt70xffmlnuy35zt2xv767pa
-#    type: lottery
-#    name: artemis
-#
-#  # DEX router
-#  - one-addr: one17qf8q2jlpe2qz5mze09zdgn0ey92sv4r323k20
-#    type: router
-#    name: viper
-#  - one-addr: one1tazx0n86y6duak8jh3q90wl3ws6azxsdp0zfjw
-#    type: router
-#    name: mochi
-#  - one-addr: one1yjkky5pdr3jje3mggzq3d8gy394vyresl69pgt
-#    type: router
-#    name: dfk
-#  - one-addr: one1dk00y8nmj08sc3vy04vxuxu7lj4twcqf7ll05n
-#    type: router
-#    name: loot
-#  - one-addr: one1rvpd4r9s6zt7hr2h596m3rra3drejagxen2var
-#    type: router
-#    name: sushi
-#  - one-addr: one1h4yhyr5vglw3hwrh5cduu2mnxpa3j52h7k4n69
-#    type: router
-#    name: boss
-#  - one-addr: one1v52e7wh3xcwxea4mt2fj5crtymq43gdck002j8
-#    type: router
-#    name: adena
-#  - one-addr: one1z4f8kva77w04m6u25qmq4mgc4kvc9ewcyjpqf6
-#    type: router
-#    name: daikiri
-#  - one-addr: one1ldfa4m0h4vkkp53v4rg25fpgtg9ysc6fhsgdwt
-#    type: router
-#    name: fuzz
-#
-#  # Yield Farming
-#  - one-addr: one1mvcxg0r34j0zzgk2qdq76a7sn40en7fy7lytq4
-#    type: masterChef
-#    name: dfk
-#  - one-addr: one1027x0jx5kfy28zcdc46kxqrrqyyvkj95qpu6ms
-#    type: masterChef
-#    name: viper
-#  - one-addr: one1h9np3t4axmuds0aq8pelmfukyezewczd4m7rhq
-#    type: masterChef
-#    name: loot
-#  - one-addr: one19w7a6ycqhey85rlyafalpzfnjkqe4glfway39f
-#    type: masterChef
-#    name: boss

@@ -19,7 +19,7 @@ type Addr struct {
 
 func InitSchema(overwrite bool) (err error) {
 	if overwrite {
-		err = RunQuery(fmt.Sprintf("drop schema if exists harmolytics_profile_%s", profile))
+		err = RunQuery(fmt.Sprintf("drop schema if exists harmolytics_profile_%s", prfl))
 		if err != nil {
 			return
 		}
@@ -29,7 +29,7 @@ func InitSchema(overwrite bool) (err error) {
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
-	err = t.Execute(&buf, profile)
+	err = t.Execute(&buf, prfl)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

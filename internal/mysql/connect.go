@@ -1,96 +1,69 @@
 package mysql
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
+	"github.com/99designs/keyring"
 	"github.com/go-errors/errors"
+	"github.com/mjmar01/harmolytics/internal/helper"
 	"golang.org/x/crypto/ssh/terminal"
-	"os"
 )
 
 var db *sql.DB
-var profile string
+var prfl string
+
+const (
+	KeyName = "database-password"
+)
 
 // ConnectDatabase saves the database configuration and tests the connection.
 // It returns the encrypted password for later use.
 // The 'password' parameter is the with 'key' encrypted password.
 // If no password is specified the user will be prompted to enter one
-func ConnectDatabase(user, password, host, port, prof string, key []byte) (p string, err error) {
-	profile = prof
+func ConnectDatabase(user, host, port, profile string) (err error) {
+	prfl = profile
 	if len(user) == 0 {
-		fmt.Println("No database user specified")
-		os.Exit(1)
+		return errors.Errorf("No user specified")
+	}
+
+	kr, err := keyring.Open(keyring.Config{ServiceName: "harmolytics"})
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	keys, err := kr.Keys()
+	if err != nil {
+		return errors.Wrap(err, 0)
 	}
 	var pwd string
-	if len(password) > 0 {
-		pwd, err = decrypt(password, key)
+	if helper.StringInSlice(KeyName, keys) {
+		item, err := kr.Get(KeyName)
 		if err != nil {
-			return
+			return errors.Wrap(err, 0)
 		}
-		p = password
+		pwd = string(item.Data)
 	} else {
 		fmt.Printf("\nEnter database password for user %s: ", user)
 		pwdData, err := terminal.ReadPassword(0)
 		fmt.Print("\n")
 		if err != nil {
-			return "", errors.Wrap(err, 0)
+			return errors.Wrap(err, 0)
 		}
 		pwd = string(pwdData)
-		p, err = encrypt(pwdData, key)
+		err = kr.Set(keyring.Item{Key: KeyName, Data: pwdData})
 		if err != nil {
-			return "", err
+			return errors.Wrap(err, 0)
 		}
 	}
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/?timeout=5s", user, pwd, host, port)
 	db, err = sql.Open("mysql", connectionString)
 	if err != nil {
-		return "", errors.Wrap(err, 0)
+		fmt.Println(err)
+		return errors.Wrap(err, 0)
 	}
 	rows, err := db.Query("SELECT VERSION()")
 	if err != nil {
-		return "", errors.Wrap(err, 0)
+		return errors.Wrap(err, 0)
 	}
 	rows.Close()
-	return
-}
-
-func encrypt(clearText []byte, key []byte) (c string, err error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", errors.Wrap(err, 0)
-	}
-	aesGCM, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", errors.Wrap(err, 0)
-	}
-	nonce := make([]byte, aesGCM.NonceSize())
-	ciphertext := aesGCM.Seal(nonce, nonce, clearText, nil)
-	c = fmt.Sprintf("%x", ciphertext)
-	return
-}
-
-func decrypt(encryptedString string, key []byte) (c string, err error) {
-	enc, err := hex.DecodeString(encryptedString)
-	if err != nil {
-		return "", errors.Wrap(err, 0)
-	}
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", errors.Wrap(err, 0)
-	}
-	aesGCM, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", errors.Wrap(err, 0)
-	}
-	nonceSize := aesGCM.NonceSize()
-	nonce, ciphertext := enc[:nonceSize], enc[nonceSize:]
-	plaintext, err := aesGCM.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return "", errors.Wrap(err, 0)
-	}
-	c = string(plaintext)
 	return
 }

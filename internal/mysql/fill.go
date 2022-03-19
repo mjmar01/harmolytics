@@ -45,7 +45,7 @@ func SetSwaps(swaps []harmony.Swap) (err error) {
 		Profile string
 		Swaps   []harmony.Swap
 	}{
-		Profile: profile,
+		Profile: prfl,
 		Swaps:   swaps,
 	}
 	var buf bytes.Buffer
@@ -66,7 +66,7 @@ func SetLiquidityActions(liquidityActions []harmony.LiquidityAction) (err error)
 		Profile   string
 		Liquidity []harmony.LiquidityAction
 	}{
-		Profile:   profile,
+		Profile:   prfl,
 		Liquidity: liquidityActions,
 	}
 	var buf bytes.Buffer
@@ -115,7 +115,7 @@ func UpdateSwapFees(swaps []harmony.Swap) (err error) {
 		Profile string
 		Swaps   []harmony.Swap
 	}{
-		Profile: profile,
+		Profile: prfl,
 		Swaps:   swaps,
 	}
 	var buf bytes.Buffer

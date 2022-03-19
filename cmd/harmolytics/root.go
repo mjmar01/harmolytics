@@ -24,8 +24,6 @@ var defaultConfig []byte
 var (
 	viper   *viperPkg.Viper
 	cfgFile string
-	// TODO better security. This works for me but using a OS keystore or something would be nice
-	cryptKey = []byte{67, 194, 156, 188, 248, 28, 165, 183, 214, 148, 85, 133, 10, 232, 132, 40, 73, 193, 18, 77, 18, 227, 39, 199, 213, 19, 120, 216, 54, 22, 111, 97}
 )
 
 var rootCmd = &cobra.Command{
@@ -95,7 +93,6 @@ func initFlags(cmd *cobra.Command) (err error) {
 }
 
 func initConfigVars() (err error) {
-	config.DB.Password = viper.GetString(PasswordParam)
 	config.RpcUrl = viper.GetString(RpcUrlParam)
 	config.HistoricRpcUrl = viper.GetString(HistoricRpcUrlParam)
 	return
@@ -111,4 +108,8 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Path to config file")
 	rootCmd.PersistentFlags().IntVarP(&config.LogLevel, LogLevelParam, "v", 1, "Lowest log level to be written to console. Range -1(TRACE) to 6(NONE)")
+}
+
+func main() {
+	Execute()
 }

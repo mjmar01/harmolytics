@@ -22,8 +22,9 @@ var decodeCmd = &cobra.Command{
 		err = initConfigVars()
 		log.CheckErr(err, log.PanicLevel)
 		log.SetLogLevel(config.LogLevel)
-		rpc.InitRpc(config.RpcUrl, config.HistoricRpcUrl)
-		_, err = mysql.ConnectDatabase(config.DB.User, config.DB.Password, config.DB.Host, config.DB.Port, config.DB.Profile, cryptKey)
+		err = rpc.InitRpc(config.RpcUrl, config.HistoricRpcUrl)
+		log.CheckErr(err, log.PanicLevel)
+		err = mysql.ConnectDatabase(config.DB.User, config.DB.Host, config.DB.Port, config.DB.Profile)
 		log.CheckErr(err, log.PanicLevel)
 	},
 	Run: func(cmd *cobra.Command, args []string) {

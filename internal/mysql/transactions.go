@@ -29,7 +29,7 @@ var tokenTransfersQ string
 
 // GetTransactionsByMethodName gets all harmony.Transaction with the specified method name, provided the name can be found in the methods table
 func GetTransactionsByMethodName(name string) (txs []harmony.Transaction, err error) {
-	rows, err := db.Query(fmt.Sprintf(transactionsMethodNameQuery, profile, name))
+	rows, err := db.Query(fmt.Sprintf(transactionsMethodNameQuery, prfl, name))
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
@@ -43,7 +43,7 @@ func GetTransactionsByMethodName(name string) (txs []harmony.Transaction, err er
 
 // GetTransactionsByLogId gets all harmony.Transaction that contain a log of the specified type
 func GetTransactionsByLogId(id string) (txs []harmony.Transaction, err error) {
-	rows, err := db.Query(fmt.Sprintf(transactionsLogIdQuery, profile, profile, id))
+	rows, err := db.Query(fmt.Sprintf(transactionsLogIdQuery, prfl, prfl, id))
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
@@ -57,7 +57,7 @@ func GetTransactionsByLogId(id string) (txs []harmony.Transaction, err error) {
 
 // GetTransactionByHash gets the harmony.Transaction with a given hash
 func GetTransactionByHash(hash string) (tx harmony.Transaction, err error) {
-	rows, err := db.Query(fmt.Sprintf(transactionHashQuery, profile, hash))
+	rows, err := db.Query(fmt.Sprintf(transactionHashQuery, prfl, hash))
 	defer rows.Close()
 	if err != nil {
 		return harmony.Transaction{}, errors.Wrap(err, 0)
@@ -72,7 +72,7 @@ func GetTransactionByHash(hash string) (tx harmony.Transaction, err error) {
 
 // GetTransactionLogsByHash returns a list of transaction.Log for a given transaction hash.
 func GetTransactionLogsByHash(txHash string) (logs []harmony.TransactionLog, err error) {
-	rows, err := db.Query(fmt.Sprintf(transactionLogsHashQuery, profile, txHash))
+	rows, err := db.Query(fmt.Sprintf(transactionLogsHashQuery, prfl, txHash))
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
@@ -96,7 +96,7 @@ func GetTransactionLogsByHash(txHash string) (logs []harmony.TransactionLog, err
 
 // GetTransactionLogByType gets all harmony.TransactionLog of a given type across all transactions
 func GetTransactionLogByType(id string) (logs []harmony.TransactionLog) {
-	rows, err := db.Query(fmt.Sprintf(transactionLogsTypeQuery, profile, id))
+	rows, err := db.Query(fmt.Sprintf(transactionLogsTypeQuery, prfl, id))
 	defer rows.Close()
 	if err != nil {
 		return nil
@@ -124,7 +124,7 @@ func SetTransactions(transactions []harmony.Transaction) (err error) {
 		Profile      string
 		Transactions []harmony.Transaction
 	}{
-		Profile:      profile,
+		Profile:      prfl,
 		Transactions: transactions,
 	}
 	var buf bytes.Buffer
@@ -145,7 +145,7 @@ func SetTokenTransfers(transfers []harmony.TokenTransaction) (err error) {
 		Profile   string
 		Transfers []harmony.TokenTransaction
 	}{
-		Profile:   profile,
+		Profile:   prfl,
 		Transfers: transfers,
 	}
 	var buf bytes.Buffer

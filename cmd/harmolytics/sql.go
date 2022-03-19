@@ -26,7 +26,7 @@ var sqlCmd = &cobra.Command{
 		err = initConfigVars()
 		log.CheckErr(err, log.PanicLevel)
 		log.SetLogLevel(config.LogLevel)
-		_, err = mysql.ConnectDatabase(config.DB.User, config.DB.Password, config.DB.Host, config.DB.Port, config.DB.Profile, cryptKey)
+		err = mysql.ConnectDatabase(config.DB.User, config.DB.Host, config.DB.Port, config.DB.Profile)
 		log.CheckErr(err, log.PanicLevel)
 	},
 	Run: func(cmd *cobra.Command, args []string) {

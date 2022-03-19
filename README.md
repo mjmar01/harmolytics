@@ -30,8 +30,7 @@ If nothing ended up on fire by now you should have a database full of all kinds 
 
 ## Known problems
 There isn't a lot of input validation, so you could easily break it if you wanted to.
-There is also an SQL injection vulnerability in the profile parameter. 
-Password safety isn't top-notch either. Again this is mostly made by myself for myself.
+There is also an SQL injection vulnerability in the profile parameter.
 
 ## Todo
 Quite a bit I still want to do with this. No guarantee any of this will ever make it.

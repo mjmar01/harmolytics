@@ -101,7 +101,7 @@ func GetMethodBySignature(sig string) (m harmony.Method, err error) {
 }
 
 func GetSwaps() (swaps []harmony.Swap, err error) {
-	rows, err := db.Query(fmt.Sprintf(swapsQuery, profile))
+	rows, err := db.Query(fmt.Sprintf(swapsQuery, prfl))
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
@@ -194,7 +194,7 @@ func GetRatios() (ratios []harmony.HistoricLiquidityRatio, err error) {
 }
 
 func GetBlockByTx(tx string) (block uint64, err error) {
-	rows, err := db.Query(fmt.Sprintf(blockQuery, profile, tx))
+	rows, err := db.Query(fmt.Sprintf(blockQuery, prfl, tx))
 	defer rows.Close()
 	if err != nil {
 		return 0, errors.Wrap(err, 0)

@@ -3,6 +3,7 @@ module github.com/mjmar01/harmolytics
 go 1.16
 
 require (
+	github.com/99designs/keyring v1.2.1
 	github.com/btcsuite/btcd/btcutil v1.1.1
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/fatih/color v1.13.0

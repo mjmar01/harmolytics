@@ -7,7 +7,6 @@ import (
 	"github.com/mjmar01/harmolytics/internal/log"
 	"github.com/mjmar01/harmolytics/internal/mysql"
 	"github.com/spf13/cobra"
-	viperPkg "github.com/spf13/viper"
 	"os"
 	"strings"
 	"text/template"
@@ -29,11 +28,10 @@ const (
 )
 
 type DbSubConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	Profile  string
+	Host    string
+	Port    string
+	User    string
+	Profile string
 }
 
 var config = struct {
@@ -85,7 +83,7 @@ var configSetCmd = &cobra.Command{
 		if len(args) > 0 {
 			keys := viper.AllKeys()
 			for _, arg := range args {
-				a := strings.Split(arg, ":")
+				a := strings.Split(arg, "=")
 				key, value := a[0], a[1]
 				if helper.StringInSlice(key, keys) {
 					viper.Set(key, value)
@@ -105,9 +103,8 @@ var configDatabaseCmd = &cobra.Command{
 	Use:   "database",
 	Short: "Configures database connection and saves it to config",
 	Run: func(cmd *cobra.Command, args []string) {
-		dbPassword, err := mysql.ConnectDatabase(config.DB.User, "", config.DB.Host, config.DB.Port, config.DB.Profile, cryptKey)
+		err := mysql.ConnectDatabase(config.DB.User, config.DB.Host, config.DB.Port, config.DB.Profile)
 		log.CheckErr(err, log.PanicLevel)
-		viperPkg.Set(PasswordParam, dbPassword)
 		viper.Set(UserParam, config.DB.User)
 		viper.Set(HostParam, config.DB.Host)
 		viper.Set(PortParam, config.DB.Port)
@@ -139,7 +136,6 @@ func loadViperValues() {
 	config.DB.Host = viper.GetString(HostParam)
 	config.DB.Port = viper.GetString(PortParam)
 	config.DB.User = viper.GetString(UserParam)
-	config.DB.Password = viper.GetString(PasswordParam)
 }
 
 func init() {
