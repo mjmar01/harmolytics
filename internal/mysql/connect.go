@@ -16,10 +16,7 @@ const (
 	KeyName = "database-password"
 )
 
-// ConnectDatabase saves the database configuration and tests the connection.
-// It returns the encrypted password for later use.
-// The 'password' parameter is the with 'key' encrypted password.
-// If no password is specified the user will be prompted to enter one
+// ConnectDatabase initiates a database connection and manages the OS keyring to store the password
 func ConnectDatabase(user, host, port, profile string) (err error) {
 	prfl = profile
 	if len(user) == 0 {
@@ -57,7 +54,6 @@ func ConnectDatabase(user, host, port, profile string) (err error) {
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/?timeout=5s", user, pwd, host, port)
 	db, err = sql.Open("mysql", connectionString)
 	if err != nil {
-		fmt.Println(err)
 		return errors.Wrap(err, 0)
 	}
 	rows, err := db.Query("SELECT VERSION()")
