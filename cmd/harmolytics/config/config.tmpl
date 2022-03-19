@@ -1,0 +1,24 @@
+# Config file for harmolytics CLI tool
+
+## General
+# Lowest log level to be written to console.
+# -1 TRACE
+#  0 DEBUG
+#  1 INFO
+#  2 WARNING
+#  3 ERROR
+#  4 FATAL
+#  5 PANIC
+#  6 NONE
+verbosity: {{.LogLevel}}
+# Harmony RPC API to use
+rpc-url: {{.RpcUrl}}
+historic-rpc-url: {{.HistoricRpcUrl}}
+
+## Database
+profile: {{.DB.Profile}}
+db-host: {{.DB.Host}}
+db-port: {{.DB.Port}}
+db-user: {{if .DB.User}}{{.DB.User}}{{else}}~{{end}}
+db-password: {{if .DB.Password}}{{.DB.Password}}{{else}}~{{end}}
+

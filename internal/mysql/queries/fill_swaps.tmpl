@@ -1,0 +1,19 @@
+{{range .Swaps}}
+{{$first := true}}
+REPLACE INTO harmolytics_profile_{{$.Profile}}.swaps (
+    hash,
+    input_token,
+    output_token,
+    input_amount,
+    output_amount,
+    path
+)
+VALUES (
+    '{{.TxHash}}',
+    '{{.InToken.Address.OneAddress}}',
+    '{{.OutToken.Address.OneAddress}}',
+    {{.InAmount}},
+    {{.OutAmount}},
+    '{{- range .Path}}{{if $first}}{{$first = false}}{{else}}:{{end}}{{.LpToken.Address.OneAddress}}{{- end}}'
+);
+{{end}}
