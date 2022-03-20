@@ -46,6 +46,7 @@ You will need to supply your own MySQL DB as backend`,
 }
 
 func initViper() (err error) {
+	log.Task("Reading configuration", log.DebugLevel)
 	viper = viperPkg.New()
 
 	if cfgFile != "" {
@@ -76,6 +77,7 @@ func initViper() (err error) {
 			}
 		}
 	}
+	log.Done()
 	return
 }
 

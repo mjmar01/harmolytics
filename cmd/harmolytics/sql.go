@@ -9,10 +9,12 @@ import (
 
 const (
 	overwriteParam = "overwrite"
+	wipeParam      = "wipe"
 )
 
 var (
 	overwriteProfile bool
+	wipeSchema       bool
 )
 
 var sqlCmd = &cobra.Command{
@@ -38,13 +40,14 @@ var sqlInitCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize database schema and necessary tables. This deletes profiles before recreating if they exist",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := mysql.InitSchema(overwriteProfile)
+		err := mysql.InitSchema(overwriteProfile, wipeSchema)
 		log.CheckErr(err, log.PanicLevel)
 	},
 }
 
 func init() {
 	sqlInitCmd.PersistentFlags().BoolVarP(&overwriteProfile, overwriteParam, "o", false, "Allow overwrite of previous profile")
+	sqlInitCmd.PersistentFlags().BoolVar(&wipeSchema, wipeParam, false, "Wipes everything before initializing schema")
 	sqlCmd.PersistentFlags().StringVar(&config.DB.Host, HostParam, "127.0.0.1", "")
 	sqlCmd.PersistentFlags().StringVar(&config.DB.Port, PortParam, "3306", "")
 	sqlCmd.PersistentFlags().StringVar(&config.DB.User, UserParam, "", "")

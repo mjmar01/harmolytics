@@ -1,9 +1,9 @@
 package uniswapV2
 
 import (
-	hexEncoding "encoding/hex"
+	"encoding/hex"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
-	"github.com/mjmar01/harmolytics/pkg/harmony/hex"
+	"github.com/mjmar01/harmolytics/pkg/solidityio"
 	"math/big"
 	"sort"
 )
@@ -20,16 +20,16 @@ const (
 func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 	// Get involved tokens
 	pathOffset := getPathOffset(tx.Method.Signature)
-	path, err := hex.DecodeArray(tx.Input[8:], pathOffset)
+	path, err := solidityio.DecodeArray(tx.Input[8:], pathOffset)
 	if err != nil {
 		return
 	}
 	pathLeft := len(path) - 1
-	inputAddr, err := hex.DecodeAddress(hexEncoding.EncodeToString(path[0]), 0)
+	inputAddr, err := solidityio.DecodeAddress(hex.EncodeToString(path[0]), 0)
 	if err != nil {
 		return
 	}
-	outputAddr, err := hex.DecodeAddress(hexEncoding.EncodeToString(path[len(path)-1]), 0)
+	outputAddr, err := solidityio.DecodeAddress(hex.EncodeToString(path[len(path)-1]), 0)
 	if err != nil {
 		return
 	}
@@ -53,11 +53,11 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 			// If it's the first swap of the path read input amount
 			if pathLeft == len(path)-1 {
 				inputAmount := big.NewInt(0)
-				aIn0, err := hex.DecodeInt(txLog.Data, 0)
+				aIn0, err := solidityio.DecodeInt(txLog.Data, 0)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
-				aIn1, err := hex.DecodeInt(txLog.Data, 1)
+				aIn1, err := solidityio.DecodeInt(txLog.Data, 1)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
@@ -68,11 +68,11 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 			// If it's the last swap of the path read output amount
 			if pathLeft == 0 {
 				outputAmount := big.NewInt(0)
-				aOut0, err := hex.DecodeInt(txLog.Data, 2)
+				aOut0, err := solidityio.DecodeInt(txLog.Data, 2)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
-				aOut1, err := hex.DecodeInt(txLog.Data, 3)
+				aOut1, err := solidityio.DecodeInt(txLog.Data, 3)
 				if err != nil {
 					return harmony.Swap{}, err
 				}
@@ -88,15 +88,15 @@ func DecodeSwap(tx harmony.Transaction) (s harmony.Swap, err error) {
 func AnalyzeFees(swap *harmony.Swap, reserves []harmony.HistoricLiquidityRatio, tx harmony.Transaction) (err error) {
 	side := getVariableSide(tx.Method.Signature)
 	pathOffset := getPathOffset(tx.Method.Signature)
-	tokenPath, err := hex.DecodeArray(tx.Input[8:], pathOffset)
+	tokenPath, err := solidityio.DecodeArray(tx.Input[8:], pathOffset)
 	if side == 1 {
 		swap.FeeToken = swap.InToken.Address.OneAddress
 		feeAmount := swap.OutAmount
 		for i := len(tokenPath) - 1; i > 0; i-- {
 			var reserveIn, reserveOut *big.Int
-			s := hexEncoding.EncodeToString(tokenPath[i])[24:]
-			a := hexEncoding.EncodeToString(reserves[i-1].LP.TokenA.Address.EthAddress.Bytes())
-			b := hexEncoding.EncodeToString(reserves[i-1].LP.TokenB.Address.EthAddress.Bytes())
+			s := hex.EncodeToString(tokenPath[i])[24:]
+			a := hex.EncodeToString(reserves[i-1].LP.TokenA.Address.EthAddress.Bytes())
+			b := hex.EncodeToString(reserves[i-1].LP.TokenB.Address.EthAddress.Bytes())
 			if s == a {
 				reserveIn = reserves[i-1].ReserveB
 				reserveOut = reserves[i-1].ReserveA
@@ -114,9 +114,9 @@ func AnalyzeFees(swap *harmony.Swap, reserves []harmony.HistoricLiquidityRatio, 
 		feeAmount := swap.InAmount
 		for i := 0; i < len(tokenPath)-1; i++ {
 			var reserveIn, reserveOut *big.Int
-			s := hexEncoding.EncodeToString(tokenPath[i])[24:]
-			a := hexEncoding.EncodeToString(reserves[i].LP.TokenA.Address.EthAddress.Bytes())
-			b := hexEncoding.EncodeToString(reserves[i].LP.TokenB.Address.EthAddress.Bytes())
+			s := hex.EncodeToString(tokenPath[i])[24:]
+			a := hex.EncodeToString(reserves[i].LP.TokenA.Address.EthAddress.Bytes())
+			b := hex.EncodeToString(reserves[i].LP.TokenB.Address.EthAddress.Bytes())
 			if s == a {
 				reserveIn = reserves[i].ReserveA
 				reserveOut = reserves[i].ReserveB

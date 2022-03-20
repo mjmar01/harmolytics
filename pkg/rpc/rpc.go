@@ -3,6 +3,7 @@ package rpc
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-errors/errors"
 	"github.com/gorilla/websocket"
 )
@@ -48,6 +49,9 @@ func InitRpc(url, historicUrl string) (err error) {
 func CloseRpc() {
 	conn.Close()
 	historicConn.Close()
+	if queryId > 1 {
+		fmt.Printf("\n%d", queryId-1)
+	}
 }
 
 func newRpcBody(method string) rpcBody {

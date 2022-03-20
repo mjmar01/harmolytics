@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/go-errors/errors"
+	"github.com/mjmar01/harmolytics/internal/log"
 	"text/template"
 )
 
@@ -17,9 +18,22 @@ type Addr struct {
 	Name       string `yaml:"name"`
 }
 
-func InitSchema(overwrite bool) (err error) {
-	if overwrite {
+func InitSchema(overwrite, wipe bool) (err error) {
+	log.Task("Writing harmolytics schema to database", log.InfoLevel)
+	if overwrite || wipe {
+		log.Debug("Overwrite is enabled. Cleaning profile")
 		err = RunQuery(fmt.Sprintf("drop schema if exists harmolytics_profile_%s", prfl))
+		if err != nil {
+			return
+		}
+	}
+	if wipe {
+		log.Warn("Wipe is enabled. Cleaning everything")
+		err = RunQuery("drop schema if exists harmolytics_historic")
+		if err != nil {
+			return
+		}
+		err = RunQuery("drop schema if exists harmolytics_default")
 		if err != nil {
 			return
 		}
@@ -33,9 +47,10 @@ func InitSchema(overwrite bool) (err error) {
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
-	err = RunTemplate(buf.String())
+	err = runTemplate(buf.String())
 	if err != nil {
 		return
 	}
+	log.Done()
 	return
 }

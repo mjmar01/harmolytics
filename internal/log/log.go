@@ -8,21 +8,22 @@ import (
 )
 
 const (
-	TraceLevel = -1
-	DebugLevel = 0
-	InfoLevel  = 1
-	WarnLevel  = 2
-	ErrorLevel = 3
-	FatalLevel = 4
-	PanicLevel = 5
+	TraceLevel = -1 // Most detail possible. Will spam the console
+	DebugLevel = 0  // Slightly detailed. Avoid in loops
+	InfoLevel  = 1  // Normal info
+	WarnLevel  = 2  // Use when there is no error
+	ErrorLevel = 3  // When there is an error but execution continues
+	FatalLevel = 4  // To stop the program with a message
+	PanicLevel = 5  // To stop and print the stack trace
 )
 
 var (
-	logLevel     = 1
-	depth        = 0
-	taskLevels   = []int{logLevel}
-	taskLevel    int
-	loggedOnTask = false
+	logLevel      = 1
+	depth         = 0
+	taskLevels    = []int{logLevel}
+	taskLevel     int
+	loggedOnTasks = []bool{false}
+	loggedOnTask  = false
 )
 
 func CheckErr(err error, level int) bool {
@@ -47,9 +48,14 @@ func Task(msg string, level int) {
 	taskLevels = append(taskLevels, taskLevel)
 	if taskLevel >= logLevel {
 		logAtLevel(msg, taskLevel)
-		loggedOnTask = false
 		depth++
+		loggedOnTask = false
+		if depth > 0 {
+			loggedOnTasks[len(loggedOnTasks)-1] = true
+		}
 	}
+	loggedOnTasks = append(loggedOnTasks, loggedOnTask)
+
 }
 
 func Done() {
@@ -65,6 +71,8 @@ func Done() {
 	}
 	taskLevels = taskLevels[:len(taskLevels)-1]
 	taskLevel = taskLevels[len(taskLevels)-1]
+	loggedOnTasks = loggedOnTasks[:len(loggedOnTasks)-1]
+	loggedOnTask = loggedOnTasks[len(loggedOnTasks)-1]
 }
 
 func Trace(msg string) {

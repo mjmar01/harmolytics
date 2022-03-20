@@ -85,7 +85,9 @@ var configSetCmd = &cobra.Command{
 			for _, arg := range args {
 				a := strings.Split(arg, "=")
 				key, value := a[0], a[1]
+				log.Trace(fmt.Sprintf("Checking for key %s", key))
 				if helper.StringInSlice(key, keys) {
+					log.Trace(fmt.Sprintf("Setting %s to %s", key, value))
 					viper.Set(key, value)
 				} else {
 					log.Error(fmt.Sprintf("Key %s not recognized as parameter", key))

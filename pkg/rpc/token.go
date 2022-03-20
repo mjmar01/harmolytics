@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
-	"github.com/mjmar01/harmolytics/pkg/harmony/hex"
+	"github.com/mjmar01/harmolytics/pkg/solidityio"
 	"math/big"
 )
 
@@ -41,7 +41,7 @@ func GetTokens(addrs []harmony.Address) (ts []harmony.Token, err error) {
 		if reply.Result == "0x" {
 			continue
 		}
-		decimals, err := hex.DecodeInt(reply.Result, 0)
+		decimals, err := solidityio.DecodeInt(reply.Result, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -80,13 +80,13 @@ func GetTokens(addrs []harmony.Address) (ts []harmony.Token, err error) {
 		}
 		idx := reply.Id - start
 		if idx&1 == 0 {
-			name, err := hex.DecodeString(reply.Result, 0)
+			name, err := solidityio.DecodeString(reply.Result, 0)
 			if err != nil {
 				return nil, err
 			}
 			ts[idx/2].Name = name
 		} else {
-			symbol, err := hex.DecodeString(reply.Result, 0)
+			symbol, err := solidityio.DecodeString(reply.Result, 0)
 			if err != nil {
 				return nil, err
 			}
@@ -102,7 +102,7 @@ func GetBalances(addrs []harmony.Address, tokens []harmony.Token, blockNums []ui
 	start := queryId
 	for i := 0; i < len(addrs); i++ {
 		body := newRpcBody(contractCall)
-		body.Params = params(tokens[i].Address, getBalanceMethod+hex.EncodeAddress(addrs[i]), blockNums[i])
+		body.Params = params(tokens[i].Address, getBalanceMethod+solidityio.EncodeAddress(addrs[i]), blockNums[i])
 		err = historicConn.WriteJSON(body)
 		if err != nil {
 			return nil, errors.Wrap(err, 0)
@@ -118,7 +118,7 @@ func GetBalances(addrs []harmony.Address, tokens []harmony.Token, blockNums []ui
 			return nil, errors.Wrap(err, 0)
 		}
 		idx := reply.Id - start
-		b, err := hex.DecodeInt(reply.Result, 0)
+		b, err := solidityio.DecodeInt(reply.Result, 0)
 		if err != nil {
 			return nil, err
 		}

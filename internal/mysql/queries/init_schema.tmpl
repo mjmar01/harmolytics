@@ -37,11 +37,7 @@ create table if not exists harmolytics_default.liquidity_pools
     token_a char(42) not null,
     token_b char(42) not null,
     constraint liquidity_pools_pk
-        primary key (address),
-    constraint liquidity_pools_token_a_address_fk
-        foreign key (token_a) references harmolytics_default.tokens (address),
-    constraint liquidity_pools_token_b_address_fk
-        foreign key (token_b) references harmolytics_default.tokens (address)
+        primary key (address)
 );
 
 create table if not exists harmolytics_historic.liquidity_ratios

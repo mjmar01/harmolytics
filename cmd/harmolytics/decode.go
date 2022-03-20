@@ -28,8 +28,7 @@ var decodeCmd = &cobra.Command{
 		log.CheckErr(err, log.PanicLevel)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		err := cmd.Help()
-		log.CheckErr(err, log.WarnLevel)
+		cmd.Help()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		rpc.CloseRpc()
@@ -40,18 +39,16 @@ var decodeSwapsCmd = &cobra.Command{
 	Use:   "swaps",
 	Short: "Analyzes swaps to get input and output token amounts",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Task("Analyzing swaps", log.InfoLevel)
+		log.Task("Decoding swaps", log.InfoLevel)
 		txs, err := mysql.GetTransactionsByMethodName("swap%")
 		log.CheckErr(err, log.PanicLevel)
-		log.Info(fmt.Sprintf("Found %d swaps", len(txs)))
+		log.Info(fmt.Sprintf("Found %d transactions that look like swaps", len(txs)))
 		var swaps []harmony.Swap
 		for _, tx := range txs {
 			s, err := uniswapV2.DecodeSwap(tx)
 			log.CheckErr(err, log.PanicLevel)
 			swaps = append(swaps, s)
 		}
-		log.Done()
-		log.Task("Saving swaps to database", log.InfoLevel)
 		err = mysql.SetSwaps(swaps)
 		log.CheckErr(err, log.PanicLevel)
 		log.Done()
@@ -62,21 +59,19 @@ var decodeLiquidityActionsCmd = &cobra.Command{
 	Use:   "liquidity-actions",
 	Short: "Analyzes uniswap LP interactions",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Task("Analyzing liquidity", log.InfoLevel)
+		log.Task("Decoding liquidity actions", log.InfoLevel)
 		adds, err := mysql.GetTransactionsByMethodName("addLiquidity%")
 		log.CheckErr(err, log.PanicLevel)
 		rems, err := mysql.GetTransactionsByMethodName("removeLiquidity%")
 		log.CheckErr(err, log.PanicLevel)
 		txs := append(adds, rems...)
-		log.Info(fmt.Sprintf("Found %d LP interactions", len(txs)))
+		log.Info(fmt.Sprintf("Found %d transactions that seem to add or remove liquidity", len(txs)))
 		var lpActions []harmony.LiquidityAction
 		for _, tx := range txs {
 			lpAction, err := uniswapV2.DecodeLiquidityAction(tx)
 			log.CheckErr(err, log.PanicLevel)
 			lpActions = append(lpActions, lpAction)
 		}
-		log.Done()
-		log.Task("Saving liquidity actions to database", log.InfoLevel)
 		err = mysql.SetLiquidityActions(lpActions)
 		log.CheckErr(err, log.PanicLevel)
 		log.Done()
@@ -87,8 +82,10 @@ var decodeLiquidityPoolsCmd = &cobra.Command{
 	Use:   "liquidity-pools",
 	Short: "Reads liquidity pool information from swaps",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Task("Decoding liquidity pools", log.InfoLevel)
 		txs, err := mysql.GetTransactionsByMethodName("swap%")
 		log.CheckErr(err, log.PanicLevel)
+		log.Info(fmt.Sprintf("Found %d transactions that use liquidity pools", len(txs)))
 		uniqueLPs := make(map[string]harmony.LiquidityPool)
 		for _, tx := range txs {
 			lps, err := uniswapV2.DecodeLiquidity(tx)
@@ -101,8 +98,10 @@ var decodeLiquidityPoolsCmd = &cobra.Command{
 		for _, lp := range uniqueLPs {
 			lps = append(lps, lp)
 		}
+		log.Info(fmt.Sprintf("Found %d unique liquidity pools", len(lps)))
 		err = mysql.SetLiquidityPools(lps)
 		log.CheckErr(err, log.PanicLevel)
+		log.Done()
 	},
 }
 
@@ -110,7 +109,7 @@ var decodeTransfersCmd = &cobra.Command{
 	Use:   "transfers",
 	Short: "Analyze normal and internal token transfers",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Task("Analyzing transfers", log.InfoLevel)
+		log.Task("Decoding token transfers", log.InfoLevel)
 		txs, err := mysql.GetTransactionsByLogId(transferEvent)
 		log.CheckErr(err, log.PanicLevel)
 		log.Info(fmt.Sprintf("Found %d transactions containing token transfers", len(txs)))
@@ -121,8 +120,6 @@ var decodeTransfersCmd = &cobra.Command{
 			transfers = append(transfers, tTx...)
 		}
 		log.Info(fmt.Sprintf("Found %d token transfers", len(transfers)))
-		log.Done()
-		log.Task("Saving token transfers to database", log.InfoLevel)
 		err = mysql.SetTokenTransfers(transfers)
 		log.CheckErr(err, log.PanicLevel)
 		log.Done()

@@ -1,12 +1,12 @@
 package uniswapV2
 
 import (
-	hexEncoding "encoding/hex"
+	"encoding/hex"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/harmony/address"
-	"github.com/mjmar01/harmolytics/pkg/harmony/hex"
 	"github.com/mjmar01/harmolytics/pkg/harmony/transaction"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
+	"github.com/mjmar01/harmolytics/pkg/solidityio"
 	"sort"
 )
 
@@ -51,18 +51,18 @@ func DecodeLiquidityAction(tx harmony.Transaction) (la harmony.LiquidityAction, 
 	case addLiquidityEth, removeLiquidityEth:
 		addrA, _ := address.New(wone)
 		la.LP.TokenA = harmony.Token{Address: addrA}
-		addrB, err := hex.DecodeAddress(tx.Input[8:], 0)
+		addrB, err := solidityio.DecodeAddress(tx.Input[8:], 0)
 		if err != nil {
 			return la, err
 		}
 		la.LP.TokenB = harmony.Token{Address: addrB}
 	case addLiquidity, removeLiquidity:
-		addrA, err := hex.DecodeAddress(tx.Input[8:], 0)
+		addrA, err := solidityio.DecodeAddress(tx.Input[8:], 0)
 		if err != nil {
 			return la, err
 		}
 		la.LP.TokenA = harmony.Token{Address: addrA}
-		addrB, err := hex.DecodeAddress(tx.Input[8:], 1)
+		addrB, err := solidityio.DecodeAddress(tx.Input[8:], 1)
 		if err != nil {
 			return la, err
 		}
@@ -110,13 +110,13 @@ func DecodeLiquidityAction(tx harmony.Transaction) (la harmony.LiquidityAction, 
 func DecodeLiquidity(tx harmony.Transaction) (lps []harmony.LiquidityPool, err error) {
 	// Get involved tokens
 	pathOffset := getPathOffset(tx.Method.Signature)
-	path, err := hex.DecodeArray(tx.Input[8:], pathOffset)
+	path, err := solidityio.DecodeArray(tx.Input[8:], pathOffset)
 	if err != nil {
 		return
 	}
 	var pathTokens []harmony.Token
 	for i := range path {
-		addr, err := hex.DecodeAddress(hexEncoding.EncodeToString(path[i]), 0)
+		addr, err := solidityio.DecodeAddress(hex.EncodeToString(path[i]), 0)
 		if err != nil {
 			return nil, err
 		}

@@ -1,5 +1,5 @@
-// Package hex contains helper functions to extract information from hex formatted data
-package hex
+// Package solidityio contains helper functions to extract information from hex formatted data used in solidity contract interactions
+package solidityio
 
 import (
 	"encoding/hex"

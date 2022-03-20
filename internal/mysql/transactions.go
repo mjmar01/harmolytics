@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/go-errors/errors"
+	"github.com/mjmar01/harmolytics/internal/log"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/harmony/address"
 	"math/big"
@@ -120,6 +121,7 @@ func GetTransactionLogByType(id string) (logs []harmony.TransactionLog) {
 
 // SetTransactions takes a list of transaction.Transaction and saves those to the tables transactions and transaction_logs
 func SetTransactions(transactions []harmony.Transaction) (err error) {
+	log.Task("Saving transactions to database", log.InfoLevel)
 	data := struct {
 		Profile      string
 		Transactions []harmony.Transaction
@@ -136,11 +138,13 @@ func SetTransactions(transactions []harmony.Transaction) (err error) {
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
-	err = RunTemplate(buf.String())
+	err = runTemplate(buf.String())
+	log.Done()
 	return
 }
 
 func SetTokenTransfers(transfers []harmony.TokenTransaction) (err error) {
+	log.Task("Saving token transfers to database", log.InfoLevel)
 	data := struct {
 		Profile   string
 		Transfers []harmony.TokenTransaction
@@ -157,7 +161,8 @@ func SetTokenTransfers(transfers []harmony.TokenTransaction) (err error) {
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
-	err = RunTemplate(buf.String())
+	err = runTemplate(buf.String())
+	log.Done()
 	return
 }
 

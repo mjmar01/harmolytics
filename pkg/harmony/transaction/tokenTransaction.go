@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"github.com/mjmar01/harmolytics/pkg/harmony"
-	"github.com/mjmar01/harmolytics/pkg/harmony/hex"
+	"github.com/mjmar01/harmolytics/pkg/solidityio"
 )
 
 const (
@@ -15,15 +15,15 @@ func DecodeTokenTransaction(tx harmony.Transaction) (tTxs []harmony.TokenTransac
 	for _, txLog := range tx.Logs {
 		// Check if this is a transfer and make sure it isn't a NFT transfer
 		if txLog.Topics[0] == transferEvent && txLog.Data != "0x" {
-			sender, err := hex.DecodeAddress(txLog.Topics[1], 0)
+			sender, err := solidityio.DecodeAddress(txLog.Topics[1], 0)
 			if err != nil {
 				return nil, err
 			}
-			receiver, err := hex.DecodeAddress(txLog.Topics[2], 0)
+			receiver, err := solidityio.DecodeAddress(txLog.Topics[2], 0)
 			if err != nil {
 				return nil, err
 			}
-			amount, err := hex.DecodeInt(txLog.Data, 0)
+			amount, err := solidityio.DecodeInt(txLog.Data, 0)
 			if err != nil {
 				return nil, err
 			}

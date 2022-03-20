@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/mjmar01/harmolytics/internal/log"
 	"github.com/mjmar01/harmolytics/internal/mysql"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
@@ -31,7 +32,9 @@ var analyzeFeesCmd = &cobra.Command{
 	Use:   "fees",
 	Short: "analyze how much has been to lost to fees in swaps",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Task("Analyzing fees for known swaps", log.InfoLevel)
 		swaps, err := mysql.GetSwaps()
+		log.Info(fmt.Sprintf("Found %d swaps in database", len(swaps)))
 		log.CheckErr(err, log.PanicLevel)
 		ratios, err := mysql.GetRatios()
 		log.CheckErr(err, log.PanicLevel)
@@ -57,6 +60,7 @@ var analyzeFeesCmd = &cobra.Command{
 		}
 		err = mysql.UpdateSwapFees(swaps)
 		log.CheckErr(err, log.PanicLevel)
+		log.Done()
 	},
 }
 

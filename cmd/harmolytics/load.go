@@ -56,15 +56,19 @@ var loadTransactionsCmd = &cobra.Command{
 	Use:   "transactions",
 	Short: "Load all transactions for a given address or hash(s)",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Task("Loading transaction information from blockchain", log.InfoLevel)
 		if address != "" {
+			log.Debug("Getting transactions by wallet")
 			w, err := addressPkg.New(address)
 			log.CheckErr(err, log.PanicLevel)
 			txs, err := transaction.GetTransactionsByWallet(w)
 			log.CheckErr(err, log.PanicLevel)
+			log.Info(fmt.Sprintf("Found %d transactions", len(txs)))
 			err = mysql.SetTransactions(txs)
 			log.CheckErr(err, log.PanicLevel)
 		}
 		if len(args) > 0 {
+			log.Debug("Getting manually specified transactions")
 			var txs []harmony.Transaction
 			for _, arg := range args {
 				tx, err := transaction.GetFullTransaction(arg)
@@ -74,6 +78,7 @@ var loadTransactionsCmd = &cobra.Command{
 			err := mysql.SetTransactions(txs)
 			log.CheckErr(err, log.PanicLevel)
 		}
+		log.Done()
 	},
 }
 
@@ -81,14 +86,14 @@ var loadTokensCmd = &cobra.Command{
 	Use:   "tokens",
 	Short: "Loads token information for all tokens that have been directly or indirectly interacted with",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Task("Loading token information", log.InfoLevel)
+		log.Task("Loading token information from blockchain", log.InfoLevel)
 		addrs, err := mysql.GetStringsByQuery(fmt.Sprintf(transferQuery, config.DB.Profile, transferEvent))
 		log.CheckErr(err, log.PanicLevel)
 		tokens, err := token.GetTokens(addrs)
 		log.Info(fmt.Sprintf("Found %d distinct tokens", len(tokens)))
-		log.Done()
 		err = mysql.SetTokens(tokens)
 		log.CheckErr(err, log.PanicLevel)
+		log.Done()
 	},
 }
 
@@ -96,7 +101,7 @@ var loadMethodsCmd = &cobra.Command{
 	Use:   "methods",
 	Short: "Look up method signatures of loaded transactions",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Task("Looking up method signatures", log.InfoLevel)
+		log.Task("Looking up method signatures in the 4byte.directory", log.InfoLevel)
 		signatures, err := mysql.GetStringsByQuery(fmt.Sprintf(methodsQuery, config.DB.Profile))
 		log.CheckErr(err, log.PanicLevel)
 		if signatures[0] == "" {
@@ -126,9 +131,9 @@ var loadMethodsCmd = &cobra.Command{
 		if diff > 0 {
 			log.Warn(fmt.Sprintf("Unable to resolve %d method signatures", diff))
 		}
-		log.Done()
 		err = mysql.SetMethods(methods)
 		log.CheckErr(err, log.PanicLevel)
+		log.Done()
 	},
 }
 
@@ -136,6 +141,7 @@ var loadLiquidityRatiosCmd = &cobra.Command{
 	Use:   "ratios",
 	Short: "Loads relevant historic liquidity ratios during swaps",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Task("Loading historic liquidity ratios from blockchain", log.InfoLevel)
 		txs, err := mysql.GetTransactionsByMethodName("swap%")
 		log.CheckErr(err, log.PanicLevel)
 		var lookups []harmony.HistoricLiquidityRatio
@@ -146,10 +152,12 @@ var loadLiquidityRatiosCmd = &cobra.Command{
 				lookups = append(lookups, harmony.HistoricLiquidityRatio{LP: pool, BlockNum: tx.BlockNum - 1})
 			}
 		}
+		log.Info(fmt.Sprintf("Determined %d relevant ratios that need to be fetched", len(lookups)))
 		ratios, err := uniswapV2.GetLiquidityRatios(lookups)
 		log.CheckErr(err, log.PanicLevel)
 		err = mysql.SetLiquidityRatios(ratios)
 		log.CheckErr(err, log.PanicLevel)
+		log.Done()
 	},
 }
 

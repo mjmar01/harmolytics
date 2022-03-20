@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/go-errors/errors"
+	"github.com/mjmar01/harmolytics/internal/log"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/harmony/address"
 	"text/template"
@@ -20,6 +21,7 @@ var tokensQ string
 
 // GetTokens returns all tokens from the database
 func GetTokens() (tokens []harmony.Token, err error) {
+	log.Task("Getting tokens from database", log.TraceLevel)
 	rows, err := db.Query(tokensQuery)
 	defer rows.Close()
 	if err != nil {
@@ -38,11 +40,13 @@ func GetTokens() (tokens []harmony.Token, err error) {
 		}
 		tokens = append(tokens, t)
 	}
+	log.Done()
 	return
 }
 
 // GetToken returns a token for a specified address
 func GetToken(addr string) (token harmony.Token, err error) {
+	log.Task("Getting token from database", log.TraceLevel)
 	test, err := db.Query(fmt.Sprintf(tokenQuery, addr))
 	defer test.Close()
 	if err != nil {
@@ -57,11 +61,13 @@ func GetToken(addr string) (token harmony.Token, err error) {
 	if err != nil {
 		return
 	}
+	log.Done()
 	return
 }
 
 // SetTokens takes a list of harmony.Token and saves those to the table tokens
 func SetTokens(tokens []harmony.Token) (err error) {
+	log.Task("Saving tokens to database", log.InfoLevel)
 	var buf bytes.Buffer
 	t, err := template.New("fillTokens").Parse(tokensQ)
 	if err != nil {
@@ -71,6 +77,7 @@ func SetTokens(tokens []harmony.Token) (err error) {
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
-	err = RunTemplate(buf.String())
+	err = runTemplate(buf.String())
+	log.Done()
 	return
 }
