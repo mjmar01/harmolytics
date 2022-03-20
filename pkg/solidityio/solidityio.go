@@ -7,6 +7,7 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/harmony/address"
+	"math"
 	"math/big"
 	"strings"
 )
@@ -33,6 +34,21 @@ func DecodeString(data string, stringPosition int) (s string, err error) {
 	return
 }
 
+// EncodeString returns the string as an input. Prepend offset accordingly
+func EncodeString(in string) (s string, err error) {
+	s, err = EncodeInt(big.NewInt(int64(len(in))))
+	if err != nil {
+		return "", err
+	}
+	size := int(math.Ceil(float64(len(in)) / 32))
+	bytes := make([]byte, size*32)
+	for i, c := range in {
+		bytes[i] = byte(c)
+	}
+	s += hex.EncodeToString(bytes)
+	return
+}
+
 // DecodeInt returns the contained uint256 as a *big.Int given the entire data input and position of the value.
 // The position usually corresponds to the parameter position of the function call.
 func DecodeInt(data string, intPosition int) (n *big.Int, err error) {
@@ -44,6 +60,17 @@ func DecodeInt(data string, intPosition int) (n *big.Int, err error) {
 	}
 	n = new(big.Int)
 	n.SetBytes(bytes)
+	return
+}
+
+// EncodeInt returns the 256bit string representation for use as input
+func EncodeInt(n *big.Int) (s string, err error) {
+	if len(n.Bytes()) > 32 {
+		return "", errors.Errorf("Input exceeds maximum size of 256bit")
+	}
+	bytes := make([]byte, 32)
+	bytes = n.FillBytes(bytes)
+	s = hex.EncodeToString(bytes)
 	return
 }
 
@@ -86,7 +113,7 @@ func DecodeAddress(data string, addressPosition int) (a harmony.Address, err err
 	return
 }
 
-// EncodeAddress returns the 256 bit representation of an address for use as input etc...
+// EncodeAddress returns the 256 bit representation of an address for use as input
 func EncodeAddress(a harmony.Address) (s string) {
 	s = hex.EncodeToString(append(make([]byte, 12), a.EthAddress.Bytes()...))
 	return
