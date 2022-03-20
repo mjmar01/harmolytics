@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  go:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+    container_name: go
+    volumes:
+      - ..:/go/src/github.com/mjmar01/harmolytics
+    depends_on:
+      - db
+
+  db:
+    image: mysql:latest
+    container_name: db
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: mypassword
+    ports:
+      - '3306:3306'

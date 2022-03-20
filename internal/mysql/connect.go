@@ -72,3 +72,15 @@ func ConnectDatabase(user, host, port, profile string) (err error) {
 	log.Done()
 	return
 }
+
+func RemovePassword() (err error) {
+	kr, err := keyring.Open(keyring.Config{ServiceName: "harmolytics"})
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	err = kr.Remove("database-password")
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+	return
+}

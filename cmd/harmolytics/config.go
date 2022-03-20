@@ -105,7 +105,9 @@ var configDatabaseCmd = &cobra.Command{
 	Use:   "database",
 	Short: "Configures database connection and saves it to config",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := mysql.ConnectDatabase(config.DB.User, config.DB.Host, config.DB.Port, config.DB.Profile)
+		err := mysql.RemovePassword()
+		log.CheckErr(err, log.PanicLevel)
+		err = mysql.ConnectDatabase(config.DB.User, config.DB.Host, config.DB.Port, config.DB.Profile)
 		log.CheckErr(err, log.PanicLevel)
 		viper.Set(UserParam, config.DB.User)
 		viper.Set(HostParam, config.DB.Host)
