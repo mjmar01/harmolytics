@@ -40,7 +40,7 @@ Quite a bit I still want to do with this. No guarantee any of this will ever mak
 - Fee analysis (~~Uniswap~~, Tokenomics, etc...)
 - Some sort of visualization tools like portfolio over time etc...
 - More resilient design and error handling
-- CSV export capabilities and maybe even remove the need for a database
+- CSV export capabilities
 - Documentation, better help commands, input validation and stuff
 
 ## Contribution
