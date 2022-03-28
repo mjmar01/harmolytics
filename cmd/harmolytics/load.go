@@ -61,9 +61,12 @@ var loadTransactionsCmd = &cobra.Command{
 			log.Debug("Getting transactions by wallet")
 			w, err := addressPkg.New(address)
 			log.CheckErr(err, log.PanicLevel)
+			txCount, err := rpc.GetTransactionCount(w, rpc.AllTx)
+			log.CheckErr(err, log.PanicLevel)
+			log.Info(fmt.Sprintf("Working on %d transactions", txCount))
 			txs, err := transaction.GetTransactionsByWallet(w)
 			log.CheckErr(err, log.PanicLevel)
-			log.Info(fmt.Sprintf("Found %d transactions", len(txs)))
+			log.Info(fmt.Sprintf("Found %d successful transactions", len(txs)))
 			err = mysql.SetTransactions(txs)
 			log.CheckErr(err, log.PanicLevel)
 		}
