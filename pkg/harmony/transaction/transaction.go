@@ -13,10 +13,11 @@ func GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Transaction, e
 	if err != nil {
 		return
 	}
-	// Split into groups of 1000
-	for i := 0; i < txCount; i += 1000 {
+	// Split into groups
+	pageSize := 10000
+	for i := 0; i < txCount; i += pageSize {
 		// Get upto 1000 transactions
-		transactions, err := rpc.GetTransactionHistory(addr.OneAddress, i/1000, 1000, rpc.AllTx)
+		transactions, err := rpc.GetTransactionHistory(addr.OneAddress, i/pageSize, pageSize, rpc.AllTx)
 		if err != nil {
 			return nil, err
 		}
