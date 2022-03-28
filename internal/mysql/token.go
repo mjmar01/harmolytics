@@ -8,6 +8,7 @@ import (
 	"github.com/mjmar01/harmolytics/internal/log"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/harmony/address"
+	"strings"
 	"text/template"
 )
 
@@ -68,6 +69,10 @@ func GetToken(addr string) (token harmony.Token, err error) {
 // SetTokens takes a list of harmony.Token and saves those to the table tokens
 func SetTokens(tokens []harmony.Token) (err error) {
 	log.Task("Saving tokens to database", log.InfoLevel)
+	for i := range tokens {
+		tokens[i].Name = strings.Replace(tokens[i].Name, "'", "''", -1)
+		//TODO Needed everywhere later
+	}
 	var buf bytes.Buffer
 	t, err := template.New("fillTokens").Parse(tokensQ)
 	if err != nil {
