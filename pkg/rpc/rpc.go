@@ -3,90 +3,43 @@ package rpc
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/go-errors/errors"
 	"github.com/gorilla/websocket"
+	"strings"
 )
 
-var (
-	conn         *websocket.Conn
-	historicConn *websocket.Conn
-	queryId      = 1
-)
-
-type rpcBody struct {
-	RpcVersion string        `json:"jsonrpc"`
-	Id         int           `json:"id"`
-	Method     string        `json:"method"`
-	Params     []interface{} `json:"params"`
-}
-
-// When the result explicitly is a string
-type rpcReplyS struct {
-	RpcVersion string `json:"jsonrpc"`
-	Id         int    `json:"id"`
-	Result     string `json:"result"`
-}
-
-// For generic results
-type rpcReplyG struct {
-	RpcVersion string      `json:"jsonrpc"`
-	Id         int         `json:"id"`
-	Result     interface{} `json:"result"`
-}
-
-func InitRpc(url, historicUrl string) (err error) {
-	conn, _, err = websocket.DefaultDialer.Dial(url, nil)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	historicConn, _, err = websocket.DefaultDialer.Dial(historicUrl, nil)
-	if err != nil {
-		return errors.Wrap(err, 0)
+func NewRpc(url string) (r *Rpc, err error) {
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	r = &Rpc{
+		ws:      conn,
+		queryId: 1,
 	}
 	return
 }
-func CloseRpc() {
-	conn.Close()
-	historicConn.Close()
-	if queryId > 1 {
-		fmt.Printf("\n%d", queryId-1)
-	}
+
+func (r *Rpc) Close() {
+	r.ws.Close()
 }
 
-func newRpcBody(method string) rpcBody {
-	body := rpcBody{
+func (r *Rpc) NewBody(method string, params []interface{}) (b Body) {
+	b = Body{
 		RpcVersion: "2.0",
-		Id:         queryId,
+		Id:         r.queryId,
 		Method:     method,
+		Params:     params,
 	}
-	queryId++
-	return body
+	r.queryId++
+	return
 }
 
-func rpcCall(method string, params interface{}) (result interface{}, err error) {
-	body, err := json.Marshal(map[string]interface{}{
-		"jsonrpc": "2.0",
-		"id":      queryId,
-		"method":  method,
-		"params":  params,
-	})
+func (r *Rpc) Call(method string, params []interface{}) (result interface{}, err error) {
+	body := r.NewBody(method, params)
+	err = r.ws.WriteJSON(body)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
-	queryId++
-	err = conn.WriteMessage(websocket.TextMessage, body)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-	_, ret, err := conn.ReadMessage()
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-	var rst struct {
-		Result interface{} `json:"result"`
-	}
-	err = json.Unmarshal(ret, &rst)
+	var rst rpcReplyG
+	err = r.ws.ReadJSON(&rst)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
@@ -94,55 +47,62 @@ func rpcCall(method string, params interface{}) (result interface{}, err error) 
 	return
 }
 
-func rawRpcCall(method string, params interface{}) (result []byte, err error) {
-	body, err := json.Marshal(map[string]interface{}{
-		"jsonrpc": "2.0",
-		"id":      queryId,
-		"method":  method,
-		"params":  params,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
+func (r *Rpc) BatchCall(bodies []Body) (results []interface{}, err error) {
+	results = make([]interface{}, len(bodies))
+	idx := make(map[int]int, len(bodies))
+	for i, body := range bodies {
+		idx[body.Id] = i
+		err = r.ws.WriteJSON(body)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
 	}
-	queryId++
-	err = conn.WriteMessage(websocket.TextMessage, body)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
+	for i := 0; i < len(bodies); i++ {
+		var rst rpcReplyG
+		err = r.ws.ReadJSON(&rst)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		results[idx[rst.Id]] = rst.Result
 	}
-	_, ret, err := conn.ReadMessage()
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-	result = ret
 	return
 }
 
-func historicRpcCall(method string, params interface{}) (result interface{}, err error) {
-	body, err := json.Marshal(map[string]interface{}{
-		"jsonrpc": "2.0",
-		"id":      queryId,
-		"method":  method,
-		"params":  params,
-	})
+func (r *Rpc) RawCall(method string, params []interface{}) (result []byte, err error) {
+	body := r.NewBody(method, params)
+	err = r.ws.WriteJSON(body)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
-	queryId++
-	err = historicConn.WriteMessage(websocket.TextMessage, body)
+	_, rs, err := r.ws.ReadMessage()
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return result, errors.Wrap(err, 0)
 	}
-	_, ret, err := historicConn.ReadMessage()
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
+	result = []byte(strings.TrimSuffix(strings.SplitAfterN(string(rs), ":", 4)[3], "}\n"))
+	return
+}
+
+func (r *Rpc) RawBatchCall(bodies []Body) (results [][]byte, err error) {
+	results = make([][]byte, len(bodies))
+	idx := make(map[int]int, len(bodies))
+	for i, body := range bodies {
+		idx[body.Id] = i
+		err = r.ws.WriteJSON(body)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
 	}
-	var rst struct {
-		Result interface{} `json:"result"`
+	for i := 0; i < len(bodies); i++ {
+		var rst rpcReplyG
+		_, rs, err := r.ws.ReadMessage()
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		err = json.Unmarshal(rs, &rst)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+		results[idx[rst.Id]] = []byte(strings.TrimSuffix(strings.SplitAfterN(string(rs), ":", 4)[3], "}\n"))
 	}
-	err = json.Unmarshal(ret, &rst)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-	result = rst.Result
 	return
 }

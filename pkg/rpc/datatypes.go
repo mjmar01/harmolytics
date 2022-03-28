@@ -1,6 +1,8 @@
 package rpc
 
-import "encoding/json"
+import (
+	"github.com/gorilla/websocket"
+)
 
 //<editor-fold desc="External types">
 const (
@@ -9,46 +11,26 @@ const (
 	ReceivedTx = "RECEIVED"
 )
 
+type Rpc struct {
+	ws      *websocket.Conn
+	queryId int
+}
+
+type Body struct {
+	RpcVersion string        `json:"jsonrpc"`
+	Id         int           `json:"id"`
+	Method     string        `json:"method"`
+	Params     []interface{} `json:"params"`
+}
+
 //</editor-fold>
 
 //<editor-fold desc="Internal types">
-type transactionJson struct {
-	TxHash    string      `json:"hash"`
-	Sender    string      `json:"from"`
-	Timestamp uint64      `json:"timestamp"`
-	GasAmount uint64      `json:"gas"`
-	GasPrice  json.Number `json:"gasPrice"`
-	Input     string      `json:"input"`
-	Receiver  string      `json:"to"`
-	Value     json.Number `json:"value"`
-	ShardID   uint        `json:"shardID"`
-	ToShardID uint        `json:"toShardID"`
-	BlockNum  uint64      `json:"blockNumber"`
-}
-
-type wrappedTransactionJson struct {
-	Result transactionJson `json:"result"`
-}
-
-type transactionHistoryJson struct {
-	Result struct {
-		Transactions []transactionJson `json:"transactions"`
-	} `json:"result"`
-}
-
-type transactionLogJson struct {
-	Topics   []string `json:"topics"`
-	Data     string   `json:"data"`
-	Address  string   `json:"address"`
-	LogIndex string   `json:"logIndex"`
-}
-type transactionReceiptJson struct {
-	Result struct {
-		Logs   []transactionLogJson `json:"logs"`
-		Status int                  `json:"status"`
-		From   string               `json:"from"`
-		TxHash string               `json:"transactionHash"`
-	} `json:"result"`
+// For generic results
+type rpcReplyG struct {
+	RpcVersion string      `json:"jsonrpc"`
+	Id         int         `json:"id"`
+	Result     interface{} `json:"result"`
 }
 
 //</editor-fold>
