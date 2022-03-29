@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
 	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -74,5 +75,28 @@ func TestRawBatchCall(t *testing.T) {
 	// Valid string
 	if string(ress[2]) != "\"0x0000000000000000000000000000000000000000000000000000000000000012\"" {
 		t.Errorf("BatchCall2 did not return valid string: %v", ress[2])
+	}
+}
+
+func TestBatches(t *testing.T) {
+	t.Parallel()
+	rs, _ := rpc.NewRpcs(url, 10)
+	wg := sync.WaitGroup{}
+	wg.Add(10)
+	ch := make(chan interface{}, 20)
+	for i := 0; i < 10; i++ {
+		go func(r *rpc.Rpc) {
+			ress, _ := r.BatchCall([]rpc.Body{r.NewBody("hmyv2_blockNumber", []interface{}{}), r.NewBody("hmyv2_blockNumber", []interface{}{})})
+			ch <- ress[0]
+			ch <- ress[1]
+			wg.Done()
+		}(rs[i])
+	}
+	wg.Wait()
+	for i := 0; i < 20; i++ {
+		n := <-ch
+		if i, ok := n.(float64); !ok || float64(int64(i)) != i {
+			t.Errorf("BatchCall1 did not return valid int: %v", n)
+		}
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/gorilla/websocket"
 	"strings"
+	"sync"
 )
 
 func NewRpc(url string) (r *Rpc, err error) {
@@ -13,6 +14,38 @@ func NewRpc(url string) (r *Rpc, err error) {
 	r = &Rpc{
 		ws:      conn,
 		queryId: 1,
+	}
+	return
+}
+
+func NewRpcs(url string, count int) (rs []*Rpc, err error) {
+	rs = make([]*Rpc, count)
+	// Do one normal to check for error
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+	rs[0] = &Rpc{
+		ws:      conn,
+		queryId: 1,
+	}
+	// Do the others parallel
+	wg := new(sync.WaitGroup)
+	wg.Add(count - 1)
+	ch := make(chan *Rpc, count)
+	for i := 1; i < count; i++ {
+		go func() {
+			conn, _, _ := websocket.DefaultDialer.Dial(url, nil)
+			ch <- &Rpc{
+				ws:      conn,
+				queryId: 1,
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	for i := 1; i < count; i++ {
+		rs[i] = <-ch
 	}
 	return
 }
