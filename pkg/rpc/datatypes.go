@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 //<editor-fold desc="External types">
@@ -12,8 +13,24 @@ const (
 )
 
 type Rpc struct {
+	peerId  string
+	timeout time.Duration
 	ws      *websocket.Conn
 	queryId int
+}
+
+type Opts struct {
+	Timeout time.Duration
+}
+
+func (o *Opts) defaults() *Opts {
+	if o == nil {
+		o = new(Opts)
+	}
+	if o.Timeout == 0 {
+		o.Timeout = time.Minute * 2
+	}
+	return o
 }
 
 type Body struct {

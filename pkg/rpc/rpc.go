@@ -7,44 +7,43 @@ import (
 	"github.com/gorilla/websocket"
 	"strings"
 	"sync"
+	"time"
 )
 
-func NewRpc(url string) (r *Rpc, err error) {
-	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
-	r = &Rpc{
-		ws:      conn,
-		queryId: 1,
-	}
-	return
-}
+const (
+	NodeMetadataMethod = "hmyv2_getNodeMetadata"
+)
 
-func NewRpcs(url string, count int) (rs []*Rpc, err error) {
-	rs = make([]*Rpc, count)
-	// Do one normal to check for error
+func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
-	rs[0] = &Rpc{
+	r = &Rpc{
 		ws:      conn,
 		queryId: 1,
 	}
-	// Do the others parallel
+	opts = opts.defaults()
+	r.timeout = opts.Timeout
+	metaData, err := r.Call(NodeMetadataMethod)
+	r.peerId = metaData.(map[string]interface{})["peerid"].(string)
+	return
+}
+
+func NewRpcs(url string, count int, opts *Opts) (rs []*Rpc, err error) {
+	rs = make([]*Rpc, count)
 	wg := new(sync.WaitGroup)
-	wg.Add(count - 1)
+	wg.Add(count)
 	ch := make(chan *Rpc, count)
-	for i := 1; i < count; i++ {
+	for i := 0; i < count; i++ {
 		go func() {
-			conn, _, _ := websocket.DefaultDialer.Dial(url, nil)
-			ch <- &Rpc{
-				ws:      conn,
-				queryId: 1,
-			}
+			r, _ := NewRpc(url, opts)
+			ch <- r
 			wg.Done()
 		}()
 	}
 	wg.Wait()
-	for i := 1; i < count; i++ {
+	for i := 0; i < count; i++ {
 		rs[i] = <-ch
 	}
 	return
@@ -54,7 +53,10 @@ func (r *Rpc) Close() {
 	r.ws.Close()
 }
 
-func (r *Rpc) NewBody(method string, params []interface{}) (b Body) {
+func (r *Rpc) NewBody(method string, params ...interface{}) (b Body) {
+	if params == nil {
+		params = []interface{}{}
+	}
 	b = Body{
 		RpcVersion: "2.0",
 		Id:         r.queryId,
@@ -65,12 +67,13 @@ func (r *Rpc) NewBody(method string, params []interface{}) (b Body) {
 	return
 }
 
-func (r *Rpc) Call(method string, params []interface{}) (result interface{}, err error) {
-	body := r.NewBody(method, params)
+func (r *Rpc) Call(method string, params ...interface{}) (result interface{}, err error) {
+	body := r.NewBody(method, params...)
 	err = r.ws.WriteJSON(body)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
+	r.ws.SetReadDeadline(time.Now().Add(r.timeout))
 	var rst rpcReplyG
 	err = r.ws.ReadJSON(&rst)
 	if err != nil {
@@ -91,6 +94,7 @@ func (r *Rpc) BatchCall(bodies []Body) (results []interface{}, err error) {
 		}
 	}
 	for i := 0; i < len(bodies); i++ {
+		r.ws.SetReadDeadline(time.Now().Add(r.timeout))
 		var rst rpcReplyG
 		err = r.ws.ReadJSON(&rst)
 		if err != nil {
@@ -101,12 +105,13 @@ func (r *Rpc) BatchCall(bodies []Body) (results []interface{}, err error) {
 	return
 }
 
-func (r *Rpc) RawCall(method string, params []interface{}) (result []byte, err error) {
-	body := r.NewBody(method, params)
+func (r *Rpc) RawCall(method string, params ...interface{}) (result []byte, err error) {
+	body := r.NewBody(method, params...)
 	err = r.ws.WriteJSON(body)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
+	r.ws.SetReadDeadline(time.Now().Add(r.timeout))
 	_, rs, err := r.ws.ReadMessage()
 	if err != nil {
 		return result, errors.Wrap(err, 0)
@@ -126,6 +131,7 @@ func (r *Rpc) RawBatchCall(bodies []Body) (results [][]byte, err error) {
 		}
 	}
 	for i := 0; i < len(bodies); i++ {
+		r.ws.SetReadDeadline(time.Now().Add(r.timeout))
 		var rst rpcReplyG
 		_, rs, err := r.ws.ReadMessage()
 		if err != nil {
