@@ -43,11 +43,17 @@ type Body struct {
 //</editor-fold>
 
 //<editor-fold desc="Internal types">
-// For generic results
+// Generic RPC results
 type rpcReplyG struct {
 	RpcVersion string      `json:"jsonrpc"`
 	Id         int         `json:"id"`
 	Result     interface{} `json:"result"`
+}
+
+// goFunc returns
+type goRpcs struct {
+	err error
+	rpc *Rpc
 }
 
 //</editor-fold>

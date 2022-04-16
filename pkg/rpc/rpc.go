@@ -31,20 +31,25 @@ func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
 }
 
 func NewRpcs(url string, count int, opts *Opts) (rs []*Rpc, err error) {
-	rs = make([]*Rpc, count)
-	wg := new(sync.WaitGroup)
+	rs, wg, ch := make([]*Rpc, count), new(sync.WaitGroup), make(chan goRpcs, count)
 	wg.Add(count)
-	ch := make(chan *Rpc, count)
 	for i := 0; i < count; i++ {
 		go func() {
-			r, _ := NewRpc(url, opts)
-			ch <- r
+			r, err := NewRpc(url, opts)
+			ch <- goRpcs{
+				err: err,
+				rpc: r,
+			}
 			wg.Done()
 		}()
 	}
 	wg.Wait()
 	for i := 0; i < count; i++ {
-		rs[i] = <-ch
+		out := <-ch
+		if out.err != nil {
+			return nil, errors.Wrap(out.err, 0)
+		}
+		rs[i] = out.rpc
 	}
 	return
 }
