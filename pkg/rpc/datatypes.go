@@ -12,6 +12,7 @@ const (
 	ReceivedTx = "RECEIVED"
 )
 
+// Rpc struct to interact with RPC endpoints
 type Rpc struct {
 	PeerId  string
 	timeout time.Duration
@@ -19,6 +20,7 @@ type Rpc struct {
 	queryId int
 }
 
+// Opts contains optional parameters for the NewRpc function
 type Opts struct {
 	Timeout time.Duration
 }
@@ -33,6 +35,7 @@ func (o *Opts) defaults() *Opts {
 	return o
 }
 
+// Body represents an RPC calls body input
 type Body struct {
 	RpcVersion string        `json:"jsonrpc"`
 	Id         int           `json:"id"`

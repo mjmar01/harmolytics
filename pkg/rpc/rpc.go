@@ -14,6 +14,7 @@ const (
 	NodeMetadataMethod = "hmyv2_getNodeMetadata"
 )
 
+// NewRpc creates a new Rpc struct
 func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
@@ -30,6 +31,7 @@ func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
 	return
 }
 
+// NewRpcs is used to generated multiple Rpc structs using go routines
 func NewRpcs(url string, count int, opts *Opts) (rs []*Rpc, err error) {
 	rs, wg, ch := make([]*Rpc, count), new(sync.WaitGroup), make(chan goRpcs, count)
 	wg.Add(count)
@@ -58,6 +60,7 @@ func (r *Rpc) Close() {
 	r.ws.Close()
 }
 
+// NewBody prepares a body with correct syntax and incremental IDs
 func (r *Rpc) NewBody(method string, params ...interface{}) (b Body) {
 	if params == nil {
 		params = []interface{}{}
@@ -72,6 +75,7 @@ func (r *Rpc) NewBody(method string, params ...interface{}) (b Body) {
 	return
 }
 
+// Call executes an RPC and returns the result as a generic interface
 func (r *Rpc) Call(method string, params ...interface{}) (result interface{}, err error) {
 	body := r.NewBody(method, params...)
 	err = r.ws.WriteJSON(body)
@@ -88,6 +92,7 @@ func (r *Rpc) Call(method string, params ...interface{}) (result interface{}, er
 	return
 }
 
+// BatchCall executes one RPC per given Body and returns the result as a slice of generic interfaces
 func (r *Rpc) BatchCall(bodies []Body) (results []interface{}, err error) {
 	results = make([]interface{}, len(bodies))
 	idx := make(map[int]int, len(bodies))
@@ -110,6 +115,7 @@ func (r *Rpc) BatchCall(bodies []Body) (results []interface{}, err error) {
 	return
 }
 
+// RawCall executes an RPC and returns the raw JSON result
 func (r *Rpc) RawCall(method string, params ...interface{}) (result []byte, err error) {
 	body := r.NewBody(method, params...)
 	err = r.ws.WriteJSON(body)
@@ -125,6 +131,7 @@ func (r *Rpc) RawCall(method string, params ...interface{}) (result []byte, err 
 	return
 }
 
+// RawBatchCall executes one RPC per given Body and returns the result as a slice of raw JSON results
 func (r *Rpc) RawBatchCall(bodies []Body) (results [][]byte, err error) {
 	results = make([][]byte, len(bodies))
 	idx := make(map[int]int, len(bodies))
