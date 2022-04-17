@@ -51,6 +51,7 @@ func TestCall(t *testing.T) {
 func TestBatchCall(t *testing.T) {
 	t.Parallel()
 	r, _ := rpc.NewRpc(url, nil)
+	defer r.Close()
 	bodies := make([]rpc.Body, 3)
 	bodies[0] = r.NewBody(TransactionByHashMethod, "0x41d6e74ff3a7e615080b98fcfb7bce8be7b1ba4a8671e1ba2e9527eb3e1da20d")
 	bodies[1] = r.NewBody(BlockNumberMethod)
@@ -73,6 +74,7 @@ func TestBatchCall(t *testing.T) {
 func TestRawCall(t *testing.T) {
 	t.Parallel()
 	r, _ := rpc.NewRpc(url, nil)
+	defer r.Close()
 	res, _ := r.RawCall(TransactionByHashMethod, "0x41d6e74ff3a7e615080b98fcfb7bce8be7b1ba4a8671e1ba2e9527eb3e1da20d")
 	// Valid JSON
 	var tmp interface{}
@@ -84,6 +86,7 @@ func TestRawCall(t *testing.T) {
 func TestRawBatchCall(t *testing.T) {
 	t.Parallel()
 	r, _ := rpc.NewRpc(url, nil)
+	defer r.Close()
 	bodies := make([]rpc.Body, 3)
 	bodies[0] = r.NewBody(TransactionByHashMethod, "0x41d6e74ff3a7e615080b98fcfb7bce8be7b1ba4a8671e1ba2e9527eb3e1da20d")
 	bodies[1] = r.NewBody(BlockNumberMethod)
@@ -107,6 +110,11 @@ func TestRawBatchCall(t *testing.T) {
 func TestBatches(t *testing.T) {
 	t.Parallel()
 	rs, _ := rpc.NewRpcs(url, 10, nil)
+	defer func() {
+		for _, r := range rs {
+			r.Close()
+		}
+	}()
 	wg := sync.WaitGroup{}
 	wg.Add(10)
 	ch := make(chan interface{}, 20)
