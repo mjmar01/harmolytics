@@ -26,7 +26,7 @@ func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
 	opts = opts.defaults()
 	r.timeout = opts.Timeout
 	metaData, err := r.Call(NodeMetadataMethod)
-	r.peerId = metaData.(map[string]interface{})["peerid"].(string)
+	r.PeerId = metaData.(map[string]interface{})["peerid"].(string)
 	return
 }
 

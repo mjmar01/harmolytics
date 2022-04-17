@@ -13,7 +13,7 @@ const (
 )
 
 type Rpc struct {
-	peerId  string
+	PeerId  string
 	timeout time.Duration
 	ws      *websocket.Conn
 	queryId int
