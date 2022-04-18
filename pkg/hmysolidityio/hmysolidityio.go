@@ -1,15 +1,22 @@
-// Package solidityio contains helper functions to extract information from hex formatted data used in solidity contract interactions
-package solidityio
+// Package hmysolidityio is used in conjunction with the harmony package to process transaction inputs/outputs
+package hmysolidityio
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
-	"github.com/mjmar01/harmolytics/pkg/harmony/address"
+	"io/ioutil"
 	"math"
 	"math/big"
+	"net/http"
+	"sort"
 	"strings"
+)
+
+const (
+	dictionaryUrl = "https://www.4byte.directory/api/v1/signatures/?hex_signature=0x"
 )
 
 // DecodeString returns the contained string given the entire data input and position of the string.
@@ -106,15 +113,53 @@ func DecodeArray(data string, arrayPosition int) (arr [][]byte, err error) {
 func DecodeAddress(data string, addressPosition int) (a harmony.Address, err error) {
 	addressPosition *= 64
 	data = strings.TrimPrefix(data, "0x")
-	a, err = address.New("0x" + data[addressPosition+24:addressPosition+64])
-	if err != nil {
-		return
-	}
+	a, err = harmony.CheckNewAddress("0x" + data[addressPosition+24:addressPosition+64])
 	return
 }
 
 // EncodeAddress returns the 256 bit representation of an address for use as input
 func EncodeAddress(a harmony.Address) (s string) {
-	s = hex.EncodeToString(append(make([]byte, 12), a.EthAddress.Bytes()...))
+	s = "0x000000000000000000000000" + a.HexAddress[2:]
+	return
+}
+
+func GetMethod(sig string) (m harmony.Method, err error) {
+	// Get method information from dictionary
+	resp, err := http.Get(dictionaryUrl + sig)
+	if err != nil {
+		return harmony.Method{}, errors.Wrap(err, 0)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return harmony.Method{}, errors.Wrap(err, 0)
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return harmony.Method{}, errors.Wrap(err, 0)
+	}
+	var data struct {
+		Results []struct {
+			TextSignature string `json:"text_signature"`
+			ID            int    `json:"id"`
+		} `json:"results"`
+	}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return harmony.Method{}, errors.Wrap(err, 0)
+	}
+	// If results were found parse information
+	if len(data.Results) > 0 {
+		// Sort to get most likely match
+		sort.Slice(data.Results, func(i, j int) bool {
+			return data.Results[i].ID < data.Results[j].ID
+		})
+		// Some string cutting and fill method
+		split := strings.IndexRune(data.Results[0].TextSignature, '(')
+		m = harmony.Method{
+			Signature:  sig,
+			Name:       data.Results[0].TextSignature[:split],
+			Parameters: strings.Split(strings.Trim(data.Results[0].TextSignature[split:], "()"), ","),
+		}
+	}
 	return
 }
