@@ -1,7 +1,6 @@
 package harmony
 
 import (
-	ethCommon "github.com/ethereum/go-ethereum/common"
 	"math/big"
 )
 
@@ -11,8 +10,12 @@ import (
 // and the same address as an eth address
 type Address struct {
 	OneAddress string
-	EthAddress ethCommon.Address
+	HexAddress string
 }
+
+//</editor-fold>
+
+//<editor-fold desc="Smart contract related types">
 
 // Token contains token information as defined by the HRC-20 standard
 type Token struct {
@@ -29,10 +32,9 @@ type Method struct {
 	Parameters []string
 }
 
-//</editor-fold>
+//</editor-fold
 
 //<editor-fold desc="Transaction related types">
-
 const (
 	TxSuccessful = 1
 	TxFailed     = 0
@@ -60,6 +62,7 @@ type Transaction struct {
 	Method    Method
 	Input     string
 	Logs      []TransactionLog
+	Status    int
 	GasAmount uint64
 	GasPrice  *big.Int
 	ShardID   uint
@@ -75,6 +78,14 @@ type TokenTransaction struct {
 	Token    Token
 	Amount   *big.Int
 }
+
+//</editor-fold>
+
+//<editor-fold desc=DeFi related types>
+const (
+	AddLiquidity    = "add"
+	RemoveLiquidity = "rem"
+)
 
 // Swap contains a decoded UniSwap swap and the hash of the transaction that caused the swap
 type Swap struct {
@@ -104,15 +115,6 @@ type LiquidityAction struct {
 	AmountLP  *big.Int
 	Direction string
 }
-
-//</editor-fold>
-
-//<editor-fold desc=LP related types>
-
-const (
-	AddLiquidity    = "add"
-	RemoveLiquidity = "rem"
-)
 
 // LiquidityPool is an abstract representation of an LP contract containing the Token itself as well as the 'contained' Tokens
 type LiquidityPool struct {
