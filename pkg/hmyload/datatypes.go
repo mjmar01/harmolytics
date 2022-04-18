@@ -11,12 +11,12 @@ import (
 
 // Loader struct used to load blockchain data
 type Loader struct {
-	defaultConn     *rpc.Rpc
-	optionalConns   []*rpc.Rpc
+	defaultConn     rpc.Rpc
+	optionalConns   []rpc.Rpc
 	connCount       int
 	uniqueConnCount int
-	connByPeer      map[string][]*rpc.Rpc
-	uniqueConns     []*rpc.Rpc
+	connByPeer      map[string][]rpc.Rpc
+	uniqueConns     []rpc.Rpc
 }
 
 // Opts contains optional parameters for the NewLoader function
@@ -72,6 +72,11 @@ type transactionLogJson struct {
 type goTx struct {
 	err error
 	tx  harmony.Transaction
+}
+
+type goTk struct {
+	err error
+	tk  harmony.Token
 }
 
 //</editor-fold>

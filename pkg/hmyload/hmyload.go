@@ -6,13 +6,12 @@ import (
 )
 
 // NewLoader creates a struct to load blockchain data
-func NewLoader(url string, opts *Opts) (l *Loader, err error) {
-	l = new(Loader)
+func NewLoader(url string, opts *Opts) (l Loader, err error) {
 	opts = opts.defaults()
 	// Create default RPC
 	l.defaultConn, err = rpc.NewRpc(url, &rpc.Opts{Timeout: opts.RpcTimeout})
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return Loader{}, errors.Wrap(err, 0)
 	}
 	// Create additional RPCs or assign default as only addition
 	if opts.AdditionalConnections != 1 {
@@ -22,15 +21,15 @@ func NewLoader(url string, opts *Opts) (l *Loader, err error) {
 		}
 		l.connCount = opts.AdditionalConnections
 	} else {
-		l.optionalConns = []*rpc.Rpc{l.defaultConn}
+		l.optionalConns = []rpc.Rpc{l.defaultConn}
 		l.connCount = 1
 	}
 	// Fill Loader metadata
-	l.connByPeer = make(map[string][]*rpc.Rpc)
+	l.connByPeer = make(map[string][]rpc.Rpc)
 	for _, conn := range l.optionalConns {
 		l.connByPeer[conn.PeerId] = append(l.connByPeer[conn.PeerId], conn)
 	}
-	l.uniqueConns = make([]*rpc.Rpc, len(l.connByPeer))
+	l.uniqueConns = make([]rpc.Rpc, len(l.connByPeer))
 	idx := 0
 	for _, rpcs := range l.connByPeer {
 		l.uniqueConns[idx] = rpcs[0]
