@@ -119,7 +119,7 @@ func TestBatches(t *testing.T) {
 	wg.Add(10)
 	ch := make(chan interface{}, 20)
 	for i := 0; i < 10; i++ {
-		go func(r *rpc.Rpc) {
+		go func(r rpc.Rpc) {
 			ress, _ := r.BatchCall([]rpc.Body{r.NewBody(BlockNumberMethod), r.NewBody(BlockNumberMethod)})
 			ch <- ress[0]
 			ch <- ress[1]

@@ -1,4 +1,4 @@
-// Package rpc exports slightly adapted versions of harmony RPC endpoints as functions for convenience.
+// Package rpc handles communication with harmony nodes over the RPC protocol using websockets
 package rpc
 
 import (
@@ -15,12 +15,12 @@ const (
 )
 
 // NewRpc creates a new Rpc struct
-func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
+func NewRpc(url string, opts *Opts) (r Rpc, err error) {
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return Rpc{}, errors.Wrap(err, 0)
 	}
-	r = &Rpc{
+	r = Rpc{
 		ws:      conn,
 		queryId: 1,
 	}
@@ -32,8 +32,8 @@ func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
 }
 
 // NewRpcs is used to generated multiple Rpc structs using go routines
-func NewRpcs(url string, count int, opts *Opts) (rs []*Rpc, err error) {
-	rs, wg, ch := make([]*Rpc, count), new(sync.WaitGroup), make(chan goRpcs, count)
+func NewRpcs(url string, count int, opts *Opts) (rs []Rpc, err error) {
+	rs, wg, ch := make([]Rpc, count), new(sync.WaitGroup), make(chan goRpcs, count)
 	wg.Add(count)
 	for i := 0; i < count; i++ {
 		go func() {

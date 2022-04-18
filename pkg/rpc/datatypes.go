@@ -56,7 +56,7 @@ type rpcReplyG struct {
 // goFunc returns
 type goRpcs struct {
 	err error
-	rpc *Rpc
+	rpc Rpc
 }
 
 //</editor-fold>
