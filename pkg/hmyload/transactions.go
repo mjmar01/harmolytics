@@ -88,7 +88,7 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []harmony.Transactio
 	// Do requests across unique nodes
 	ch := make(chan goTx, len(hashes))
 	for i, conn := range l.uniqueConns {
-		go func(rpc *rpc.Rpc, bodies []rpc.Body) {
+		go func(rpc rpc.Rpc, bodies []rpc.Body) {
 			ress, err := rpc.RawBatchCall(bodies)
 			if err != nil {
 				ch <- goTx{err: err}
@@ -118,9 +118,7 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []harmony.Transactio
 	for i := 0; i < len(hashes); i++ {
 		out := <-ch
 		if out.err != nil {
-			if err != nil {
-				return txs, out.err
-			}
+			return txs, out.err
 		}
 		txs[i] = out.tx
 	}
