@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestHistory(t *testing.T) {
+func TestGetHistory(t *testing.T) {
 	t.Parallel()
 	l, err := hmyload.NewLoader(url, &hmyload.Opts{AdditionalConnections: 10})
 	defer l.Close()
@@ -47,5 +47,28 @@ func TestGetFullTransaction(t *testing.T) {
 	}
 	if txs[0].TxHash != txs[1].TxHash {
 		t.Errorf("Result is not consistent")
+	}
+}
+
+func TestGetTokens(t *testing.T) {
+	t.Parallel()
+	l, _ := hmyload.NewLoader(url, nil)
+	defer l.Close()
+	tks, err := l.GetTokens(
+		harmony.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
+		harmony.NewAddress("one1t8auuy8kl30ujqt2u229273r2eshvhzpu59sz6"),
+		harmony.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(tks) != 3 {
+		t.Errorf("Result did contain incorrect amount of tokens: %d", len(tks))
+	}
+	if tks[0].Symbol != "WONE" {
+		t.Errorf("Result did contain incorrect token Symbol: %s", tks[0].Symbol)
+	}
+	if tks[0].Name != tks[2].Name {
+		t.Errorf("Result is in incorrect order")
 	}
 }
