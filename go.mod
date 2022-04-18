@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/99designs/keyring v1.2.1
 	github.com/btcsuite/btcd/btcutil v1.1.1
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/fatih/color v1.13.0
 	github.com/go-errors/errors v1.4.2
