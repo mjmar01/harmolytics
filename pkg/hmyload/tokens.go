@@ -34,7 +34,7 @@ func (l *Loader) GetTokens(addrs ...harmony.Address) (tks []harmony.Token, err e
 	// Do requests
 	ch := make(chan goTk, len(addrs))
 	for i, conn := range l.uniqueConns {
-		go func(rpc rpc.Rpc, bodies []rpc.Body, addrs []harmony.Address) {
+		go func(rpc *rpc.Rpc, bodies []rpc.Body, addrs []harmony.Address) {
 			ress, err := rpc.BatchCall(bodies)
 			if err != nil {
 				ch <- goTk{err: err}

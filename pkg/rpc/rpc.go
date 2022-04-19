@@ -15,15 +15,14 @@ const (
 )
 
 // NewRpc creates a new Rpc struct
-func NewRpc(url string, opts *Opts) (r Rpc, err error) {
+func NewRpc(url string, opts *Opts) (r *Rpc, err error) {
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
-		return Rpc{}, errors.Wrap(err, 0)
+		return nil, errors.Wrap(err, 0)
 	}
-	r = Rpc{
-		ws:      conn,
-		queryId: 1,
-	}
+	r = new(Rpc)
+	r.ws = conn
+	r.queryId = 1
 	opts = opts.defaults()
 	r.timeout = opts.Timeout
 	metaData, err := r.Call(NodeMetadataMethod)
@@ -32,8 +31,8 @@ func NewRpc(url string, opts *Opts) (r Rpc, err error) {
 }
 
 // NewRpcs is used to generated multiple Rpc structs using go routines
-func NewRpcs(url string, count int, opts *Opts) (rs []Rpc, err error) {
-	rs, wg, ch := make([]Rpc, count), new(sync.WaitGroup), make(chan goRpcs, count)
+func NewRpcs(url string, count int, opts *Opts) (rs []*Rpc, err error) {
+	rs, wg, ch := make([]*Rpc, count), new(sync.WaitGroup), make(chan goRpcs, count)
 	wg.Add(count)
 	for i := 0; i < count; i++ {
 		go func() {

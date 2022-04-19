@@ -2,8 +2,10 @@ package hmyload
 
 import (
 	"encoding/json"
+	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
+	"os"
 	"time"
 )
 
@@ -11,31 +13,40 @@ import (
 
 // Loader struct used to load blockchain data
 type Loader struct {
-	defaultConn     rpc.Rpc
-	optionalConns   []rpc.Rpc
+	defaultConn     *rpc.Rpc
+	optionalConns   []*rpc.Rpc
 	connCount       int
 	uniqueConnCount int
-	connByPeer      map[string][]rpc.Rpc
-	uniqueConns     []rpc.Rpc
+	connByPeer      map[string][]*rpc.Rpc
+	uniqueConns     []*rpc.Rpc
 }
 
 // Opts contains optional parameters for the NewLoader function
 type Opts struct {
 	AdditionalConnections int
 	RpcTimeout            time.Duration
+	CacheDir              string
 }
 
-func (o *Opts) defaults() *Opts {
-	if o == nil {
-		o = new(Opts)
+func (o *Opts) defaults() (out *Opts, err error) {
+	if o != nil {
+		out = o
+	} else {
+		out = new(Opts)
 	}
-	if o.AdditionalConnections == 0 {
-		o.AdditionalConnections = 1
+	if out.AdditionalConnections == 0 {
+		out.AdditionalConnections = 1
 	}
-	if o.RpcTimeout == 0 {
-		o.RpcTimeout = time.Minute * 2
+	if out.RpcTimeout == 0 {
+		out.RpcTimeout = time.Minute * 2
 	}
-	return o
+	if out.CacheDir == "" {
+		out.CacheDir, err = os.UserCacheDir()
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+	}
+	return
 }
 
 //</editor-fold>
