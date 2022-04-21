@@ -149,7 +149,7 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 }
 
 func readTxInfoFromResponse(data []byte) (tx types.Transaction, err error) {
-	// Read JSON into harmony.Transaction
+	// Read JSON into transaction
 	var t transactionInfoJson
 	err = json.Unmarshal(data, &t)
 	if err != nil {
