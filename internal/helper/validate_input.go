@@ -1,4 +1,4 @@
-package cmd
+package helper
 
 import (
 	"encoding/hex"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func validateAddresses(addrs ...string) error {
+func ValidateAddresses(addrs ...string) error {
 	for _, addr := range addrs {
 		if _, err := types.CheckNewAddress(addr); err != nil {
 			return fmt.Errorf("string: '%s' is not a valid address", addr)
@@ -16,7 +16,7 @@ func validateAddresses(addrs ...string) error {
 	return nil
 }
 
-func validateTxHash(hashes ...string) error {
+func ValidateTxHash(hashes ...string) error {
 	for _, hash := range hashes {
 		if data, err := hex.DecodeString(strings.TrimPrefix(hash, "0x")); err != nil || len(data) != 32 {
 			return fmt.Errorf("string: '%s' is not a valid transaction hash", hash)
