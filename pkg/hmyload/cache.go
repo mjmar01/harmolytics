@@ -1,12 +1,14 @@
 package hmyload
 
 import (
+	"fmt"
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/hmybebop"
 	"github.com/mjmar01/harmolytics/pkg/types"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -16,9 +18,9 @@ const (
 
 var lock sync.RWMutex
 var load sync.Once
-var inMemory map[string][]byte
+var inMemory map[string]*types.Transaction
 
-func (l *Loader) saveTransaction(tx types.Transaction) (err error) {
+func (l *Loader) saveTransaction(tx *types.Transaction) (err error) {
 	data, err := hmybebop.EncodeTransaction(tx)
 	if err != nil {
 		return errors.Wrap(err, 0)
@@ -32,30 +34,37 @@ func (l *Loader) saveTransaction(tx types.Transaction) (err error) {
 	return
 }
 
-func (l *Loader) checkTransaction(hash string) (tx types.Transaction, ok bool) {
+func (l *Loader) checkTransaction(hash string) (tx *types.Transaction, ok bool) {
 	load.Do(func() {
-		lock.Lock()
-		inMemory = map[string][]byte{}
-		iter := l.cache.NewIterator(util.BytesPrefix([]byte(txPrefix)), nil)
-		for iter.Next() {
-			src := iter.Value()
-			cp := make([]byte, len(src))
-			copy(cp, src)
-			inMemory[strings.TrimPrefix(string(iter.Key()), txPrefix)] = cp
-		}
-		iter.Release()
-		lock.Unlock()
+		t1 := time.Now()
+		loadIntoMemory(l)
+		fmt.Println(time.Since(t1))
 	})
 	lock.RLock()
-	rawTx, inCache := inMemory[hash]
+	txPtr, inCache := inMemory[hash]
 	lock.RUnlock()
-	if !inCache {
-		return types.Transaction{}, false
+	return txPtr, inCache
+}
+
+func loadIntoMemory(l *Loader) {
+	lock.Lock()
+	inMemory = map[string]*types.Transaction{}
+	lock.Unlock()
+	iter := l.cache.NewIterator(util.BytesPrefix([]byte(txPrefix)), nil)
+	wg := sync.WaitGroup{}
+	for iter.Next() {
+		src := iter.Value()
+		cp := make([]byte, len(src))
+		copy(cp, src)
+		go func(key string, in []byte) {
+			wg.Add(1)
+			txPtr, _ := hmybebop.DecodeTransaction(in)
+			lock.Lock()
+			inMemory[key] = txPtr
+			lock.Unlock()
+			wg.Done()
+		}(strings.TrimPrefix(string(iter.Key()), txPrefix), cp)
 	}
-	tx, err := hmybebop.DecodeTransaction(rawTx)
-	if err != nil {
-		return types.Transaction{}, false
-	}
-	ok = true
-	return
+	wg.Wait()
+	iter.Release()
 }
