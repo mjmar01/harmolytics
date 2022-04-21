@@ -3,7 +3,7 @@ package hmysolidityio
 import (
 	"encoding/hex"
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"math"
 	"math/big"
 	"sort"
@@ -38,8 +38,8 @@ func EncodeAll(in ...interface{}) (out string, err error) {
 		switch value.(type) {
 		case *big.Int:
 			e.prefixes[i] = encodeInt(value.(*big.Int))
-		case harmony.Address:
-			e.prefixes[i] = encodeAddress(value.(harmony.Address))
+		case types.Address:
+			e.prefixes[i] = encodeAddress(value.(types.Address))
 		case string:
 			suffix := encodeString(value.(string))
 			offset, prefix := e.getOffset(len(suffix) / 64)
@@ -82,8 +82,8 @@ func (e *Encoder) recurseEncode(offset int, in []interface{}) {
 		switch value.(type) {
 		case *big.Int:
 			e.suffixes[offset] += encodeInt(value.(*big.Int))
-		case harmony.Address:
-			e.suffixes[offset] += encodeAddress(value.(harmony.Address))
+		case types.Address:
+			e.suffixes[offset] += encodeAddress(value.(types.Address))
 		case string:
 			suffix := encodeString(value.(string))
 			subOffset, prefix := e.getOffset(len(suffix) / 64)
@@ -110,7 +110,7 @@ func checkInput(in []interface{}) (err error) {
 			}
 		case string:
 			continue
-		case harmony.Address:
+		case types.Address:
 			continue
 		case []interface{}:
 			err = checkInput(i.([]interface{}))
@@ -151,7 +151,7 @@ func encodeInt(n *big.Int) (s string) {
 	return
 }
 
-func encodeAddress(a harmony.Address) (s string) {
+func encodeAddress(a types.Address) (s string) {
 	s = "000000000000000000000000" + a.HexAddress[2:]
 	return
 }

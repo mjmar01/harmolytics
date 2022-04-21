@@ -1,4 +1,4 @@
-package harmony
+package types
 
 import (
 	"math/big"

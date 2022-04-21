@@ -3,8 +3,8 @@ package hmyload
 import (
 	"encoding/json"
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"github.com/syndtr/goleveldb/leveldb"
 	"os"
 	"sync"
@@ -94,12 +94,12 @@ type transactionLogJson struct {
 // goFunc returns
 type goTx struct {
 	err error
-	tx  harmony.Transaction
+	tx  types.Transaction
 }
 
 type goTk struct {
 	err error
-	tk  harmony.Token
+	tk  types.Token
 }
 
 //</editor-fold>

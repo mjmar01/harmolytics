@@ -4,7 +4,7 @@ package hmysolidityio
 import (
 	"encoding/json"
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -15,19 +15,19 @@ const (
 	dictionaryUrl = "https://www.4byte.directory/api/v1/signatures/?hex_signature=0x"
 )
 
-func GetMethod(sig string) (m harmony.Method, err error) {
+func GetMethod(sig string) (m types.Method, err error) {
 	// Get method information from dictionary
 	resp, err := http.Get(dictionaryUrl + sig)
 	if err != nil {
-		return harmony.Method{}, errors.Wrap(err, 0)
+		return types.Method{}, errors.Wrap(err, 0)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return harmony.Method{}, errors.Wrap(err, 0)
+		return types.Method{}, errors.Wrap(err, 0)
 	}
 	err = resp.Body.Close()
 	if err != nil {
-		return harmony.Method{}, errors.Wrap(err, 0)
+		return types.Method{}, errors.Wrap(err, 0)
 	}
 	var data struct {
 		Results []struct {
@@ -37,7 +37,7 @@ func GetMethod(sig string) (m harmony.Method, err error) {
 	}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return harmony.Method{}, errors.Wrap(err, 0)
+		return types.Method{}, errors.Wrap(err, 0)
 	}
 	// If results were found parse information
 	if len(data.Results) > 0 {
@@ -47,7 +47,7 @@ func GetMethod(sig string) (m harmony.Method, err error) {
 		})
 		// Some string cutting and fill method
 		split := strings.IndexRune(data.Results[0].TextSignature, '(')
-		m = harmony.Method{
+		m = types.Method{
 			Signature:  sig,
 			Name:       data.Results[0].TextSignature[:split],
 			Parameters: strings.Split(strings.Trim(data.Results[0].TextSignature[split:], "()"), ","),

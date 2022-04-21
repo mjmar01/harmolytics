@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"math"
 	"math/big"
 	"strings"
@@ -19,7 +19,7 @@ const (
 )
 
 // GetTransactionsByWallet returns a list of all successful Transaction for a given harmony.Address
-func (l *Loader) GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Transaction, err error) {
+func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transaction, err error) {
 	// Get total number of transactions and prepare slice with a bit overhead
 	c, err := l.defaultConn.Call(transactionCountMethod, addr.OneAddress, rpc.AllTx)
 	if err != nil {
@@ -29,7 +29,7 @@ func (l *Loader) GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Tr
 	// Split into groups and let pages overlap a bit
 	pageSize, overlap := 50000, 50
 	// Get histories
-	txMap := map[string]*harmony.Transaction{}
+	txMap := map[string]*types.Transaction{}
 	for i := 0; i < txCount; i += pageSize {
 		res, err := l.defaultConn.RawCall(transactionHistoryMethod, map[string]interface{}{
 			"address":   addr.OneAddress,
@@ -71,10 +71,10 @@ func (l *Loader) GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Tr
 }
 
 // GetFullTransactions returns transactions and their receipts for every given hash. Does not include method information (yet)
-func (l *Loader) GetFullTransactions(hashes ...string) (txs []harmony.Transaction, err error) {
+func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction, err error) {
 	// Prepare requests
-	txs = make([]harmony.Transaction, len(hashes))
-	ethMap, hmyMap := map[string]*harmony.Transaction{}, map[string]*harmony.Transaction{}
+	txs = make([]types.Transaction, len(hashes))
+	ethMap, hmyMap := map[string]*types.Transaction{}, map[string]*types.Transaction{}
 	foundInCache := 0
 	bodiesByConn, idx := make([][]rpc.Body, l.uniqueConnCount), 0
 	for _, hash := range hashes {
@@ -148,28 +148,28 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []harmony.Transactio
 	return
 }
 
-func readTxInfoFromResponse(data []byte) (tx harmony.Transaction, err error) {
+func readTxInfoFromResponse(data []byte) (tx types.Transaction, err error) {
 	// Read JSON into harmony.Transaction
 	var t transactionInfoJson
 	err = json.Unmarshal(data, &t)
 	if err != nil {
-		return harmony.Transaction{}, errors.Wrap(err, 0)
+		return types.Transaction{}, errors.Wrap(err, 0)
 	}
 	value := new(big.Int)
 	value.SetString(t.Value.String(), 10)
 	gasPrice := new(big.Int)
 	gasPrice.SetString(t.GasPrice.String(), 10)
-	var method harmony.Method
+	var method types.Method
 	if len(t.Input) > 10 {
 		method.Signature = t.Input[2:10]
 	} else {
 		method.Signature = ""
 	}
-	tx = harmony.Transaction{
+	tx = types.Transaction{
 		TxHash:    t.TxHash,
 		EthTxHash: t.EthTxHash,
-		Sender:    harmony.NewAddress(t.Sender),
-		Receiver:  harmony.NewAddress(t.Receiver),
+		Sender:    types.NewAddress(t.Sender),
+		Receiver:  types.NewAddress(t.Receiver),
 		BlockNum:  t.BlockNum,
 		Timestamp: t.Timestamp,
 		Value:     value,
@@ -183,7 +183,7 @@ func readTxInfoFromResponse(data []byte) (tx harmony.Transaction, err error) {
 	return
 }
 
-func readTxReceiptFromResponse(data []byte) (s int, ls []harmony.TransactionLog, err error) {
+func readTxReceiptFromResponse(data []byte) (s int, ls []types.TransactionLog, err error) {
 	// Read JSON to get tx status and logs
 	var t transactionReceiptJson
 	err = json.Unmarshal(data, &t)
@@ -198,10 +198,10 @@ func readTxReceiptFromResponse(data []byte) (s int, ls []harmony.TransactionLog,
 			return 0, nil, errors.Wrap(err, 0)
 		}
 		// Add logs
-		ls = append(ls, harmony.TransactionLog{
+		ls = append(ls, types.TransactionLog{
 			TxHash:   t.TxHash,
 			LogIndex: int(index),
-			Address:  harmony.NewAddress(l.Address),
+			Address:  types.NewAddress(l.Address),
 			Topics:   l.Topics,
 			Data:     l.Data,
 		})

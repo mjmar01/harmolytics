@@ -2,8 +2,8 @@ package hmyload
 
 import (
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/hmybebop"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"strings"
 	"sync"
@@ -18,7 +18,7 @@ var lock sync.RWMutex
 var load sync.Once
 var inMemory map[string][]byte
 
-func (l *Loader) saveTransaction(tx harmony.Transaction) (err error) {
+func (l *Loader) saveTransaction(tx types.Transaction) (err error) {
 	data, err := hmybebop.EncodeTransaction(tx)
 	if err != nil {
 		return errors.Wrap(err, 0)
@@ -32,7 +32,7 @@ func (l *Loader) saveTransaction(tx harmony.Transaction) (err error) {
 	return
 }
 
-func (l *Loader) checkTransaction(hash string) (tx harmony.Transaction, ok bool) {
+func (l *Loader) checkTransaction(hash string) (tx types.Transaction, ok bool) {
 	load.Do(func() {
 		lock.Lock()
 		inMemory = map[string][]byte{}
@@ -50,11 +50,11 @@ func (l *Loader) checkTransaction(hash string) (tx harmony.Transaction, ok bool)
 	rawTx, inCache := inMemory[hash]
 	lock.RUnlock()
 	if !inCache {
-		return harmony.Transaction{}, false
+		return types.Transaction{}, false
 	}
 	tx, err := hmybebop.DecodeTransaction(rawTx)
 	if err != nil {
-		return harmony.Transaction{}, false
+		return types.Transaction{}, false
 	}
 	ok = true
 	return

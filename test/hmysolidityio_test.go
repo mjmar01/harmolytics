@@ -3,8 +3,8 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/hmysolidityio"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"math/big"
 	"testing"
 )
@@ -68,7 +68,7 @@ func TestDecodeArray(t *testing.T) {
 func TestEncodeAll(t *testing.T) {
 	i := new(big.Int)
 	i.SetInt64(17)
-	addr := harmony.NewAddress("one1afvfayllrzc6ru0fhtr7705x4d32mhrewz4c77")
+	addr := types.NewAddress("one1afvfayllrzc6ru0fhtr7705x4d32mhrewz4c77")
 	s, err := hmysolidityio.EncodeAll(
 		i,    // 0
 		addr, // 1

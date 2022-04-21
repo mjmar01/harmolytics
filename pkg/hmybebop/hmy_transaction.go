@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/hex"
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"math/big"
 	"strings"
 )
 
-func EncodeTransaction(tx harmony.Transaction) (data []byte, err error) {
+func EncodeTransaction(tx types.Transaction) (data []byte, err error) {
 	hash, _ := hex.DecodeString(strings.TrimPrefix(tx.TxHash, "0x"))
 	ethHash, _ := hex.DecodeString(strings.TrimPrefix(tx.EthTxHash, "0x"))
 	input, _ := hex.DecodeString(strings.TrimPrefix(tx.Input, "0x"))
@@ -54,29 +54,29 @@ func EncodeTransaction(tx harmony.Transaction) (data []byte, err error) {
 	return
 }
 
-func DecodeTransaction(data []byte) (tx harmony.Transaction, err error) {
+func DecodeTransaction(data []byte) (tx types.Transaction, err error) {
 	bTx := Transaction{}
 	err = bTx.DecodeBebop(bytes.NewReader(data))
 	if err != nil {
-		return harmony.Transaction{}, errors.Wrap(err, 0)
+		return types.Transaction{}, errors.Wrap(err, 0)
 	}
 
 	hash := "0x" + hex.EncodeToString(bTx.Hash)
 	ethHash := "0x" + hex.EncodeToString(bTx.EthHash)
 	input := "0x" + hex.EncodeToString(bTx.Input)
 
-	sender := harmony.NewAddress("0x" + hex.EncodeToString(bTx.Sender))
-	receiver := harmony.NewAddress("0x" + hex.EncodeToString(bTx.Receiver))
+	sender := types.NewAddress("0x" + hex.EncodeToString(bTx.Sender))
+	receiver := types.NewAddress("0x" + hex.EncodeToString(bTx.Receiver))
 
-	logs := make([]harmony.TransactionLog, len(bTx.Logs))
+	logs := make([]types.TransactionLog, len(bTx.Logs))
 	for i, log := range bTx.Logs {
-		addr := harmony.NewAddress("0x" + hex.EncodeToString(log.Address))
+		addr := types.NewAddress("0x" + hex.EncodeToString(log.Address))
 		logData := "0x" + hex.EncodeToString(log.Data)
 		var topics []string
 		for i := 32; i < len(log.Topics); i += 32 {
 			topics = append(topics, "0x"+hex.EncodeToString(log.Topics[i-32:i-1]))
 		}
-		logs[i] = harmony.TransactionLog{
+		logs[i] = types.TransactionLog{
 			TxHash:   hash,
 			LogIndex: int(log.Index),
 			Address:  addr,
@@ -85,7 +85,7 @@ func DecodeTransaction(data []byte) (tx harmony.Transaction, err error) {
 		}
 	}
 
-	tx = harmony.Transaction{
+	tx = types.Transaction{
 		TxHash:    hash,
 		EthTxHash: ethHash,
 		Sender:    sender,
@@ -93,7 +93,7 @@ func DecodeTransaction(data []byte) (tx harmony.Transaction, err error) {
 		BlockNum:  uint64(bTx.BlockNum),
 		Timestamp: bTx.TimeStamp,
 		Value:     new(big.Int).SetBytes(bTx.Amount),
-		Method:    harmony.Method{},
+		Method:    types.Method{},
 		Input:     input,
 		Logs:      logs,
 		Status:    int(bTx.Status),

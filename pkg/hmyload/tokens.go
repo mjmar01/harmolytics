@@ -1,9 +1,9 @@
 package hmyload
 
 import (
-	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/hmysolidityio"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
+	"github.com/mjmar01/harmolytics/pkg/types"
 )
 
 const (
@@ -14,10 +14,10 @@ const (
 	balanceMethod  = "0x70a08231"
 )
 
-func (l *Loader) GetTokens(addrs ...harmony.Address) (tks []harmony.Token, err error) {
+func (l *Loader) GetTokens(addrs ...types.Address) (tks []types.Token, err error) {
 	// Prepare requests across unique peers
-	tks = make([]harmony.Token, len(addrs))
-	bodiesByConn, idx, addrsByConn := make([][]rpc.Body, l.uniqueConnCount), 0, make([][]harmony.Address, l.uniqueConnCount)
+	tks = make([]types.Token, len(addrs))
+	bodiesByConn, idx, addrsByConn := make([][]rpc.Body, l.uniqueConnCount), 0, make([][]types.Address, l.uniqueConnCount)
 	for _, addr := range addrs {
 		addrsByConn[idx] = append(addrsByConn[idx], addr)
 		b := l.uniqueConns[idx].NewBody(callMethod, map[string]string{"to": addr.HexAddress, "data": nameMethod}, "latest")
@@ -34,7 +34,7 @@ func (l *Loader) GetTokens(addrs ...harmony.Address) (tks []harmony.Token, err e
 	// Do requests
 	ch := make(chan goTk, len(addrs))
 	for i, conn := range l.uniqueConns {
-		go func(rpc *rpc.Rpc, bodies []rpc.Body, addrs []harmony.Address) {
+		go func(rpc *rpc.Rpc, bodies []rpc.Body, addrs []types.Address) {
 			ress, err := rpc.BatchCall(bodies)
 			if err != nil {
 				ch <- goTk{err: err}
@@ -42,7 +42,7 @@ func (l *Loader) GetTokens(addrs ...harmony.Address) (tks []harmony.Token, err e
 			}
 			// Read each result into a token
 			for i := 0; i < len(ress); i += 3 {
-				var tk harmony.Token
+				var tk types.Token
 				tk.Address = addrs[i/3]
 				tk.Name, err = hmysolidityio.DecodeString(ress[i].(string), 0)
 				if err != nil {
@@ -68,7 +68,7 @@ func (l *Loader) GetTokens(addrs ...harmony.Address) (tks []harmony.Token, err e
 		}(conn, bodiesByConn[i], addrsByConn[i])
 	}
 	// Read Output
-	tkMap := make(map[string]harmony.Token, len(addrs))
+	tkMap := make(map[string]types.Token, len(addrs))
 	for i := 0; i < len(addrs); i++ {
 		out := <-ch
 		if out.err != nil {

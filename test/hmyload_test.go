@@ -1,8 +1,8 @@
 package test
 
 import (
-	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/hmyload"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func TestGetHistory(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	txs, err := l.GetTransactionsByWallet(harmony.NewAddress("one15vlc8yqstm9algcf6e94dxqx6y04jcsqjuc3gt"))
+	txs, err := l.GetTransactionsByWallet(types.NewAddress("one15vlc8yqstm9algcf6e94dxqx6y04jcsqjuc3gt"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,9 +55,9 @@ func TestGetTokens(t *testing.T) {
 	l, _ := hmyload.NewLoader(url, nil)
 	defer l.Close()
 	tks, err := l.GetTokens(
-		harmony.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
-		harmony.NewAddress("one1t8auuy8kl30ujqt2u229273r2eshvhzpu59sz6"),
-		harmony.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
+		types.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
+		types.NewAddress("one1t8auuy8kl30ujqt2u229273r2eshvhzpu59sz6"),
+		types.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
 	)
 	if err != nil {
 		t.Error(err)

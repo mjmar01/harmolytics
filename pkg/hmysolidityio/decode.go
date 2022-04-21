@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/harmony"
+	"github.com/mjmar01/harmolytics/pkg/types"
 	"math/big"
 	"strings"
 )
@@ -58,13 +58,13 @@ func DecodeArray(data string, arrayPosition int) (arr [][]byte, err error) {
 
 // DecodeAddress returns the contained harmony.Address given the entire data input and position of the address.
 // The position usually corresponds to the parameter position of the function call.
-func DecodeAddress(data string, addressPosition int) (a harmony.Address, err error) {
+func DecodeAddress(data string, addressPosition int) (a types.Address, err error) {
 	addressPosition *= 64
 	data, err = cleanInput(data)
 	if err != nil {
 		return
 	}
-	a, err = harmony.CheckNewAddress("0x" + data[addressPosition+24:addressPosition+64])
+	a, err = types.CheckNewAddress("0x" + data[addressPosition+24:addressPosition+64])
 	return
 }
 
