@@ -12,12 +12,12 @@ const (
 	url = "wss://ws.s0.t.hmny.io"
 )
 
-var tx types.Transaction
+var tx *types.Transaction
 var txBebop, txGob []byte
 var dump interface{}
 
 func init() {
-	tx = types.Transaction{
+	tx = &types.Transaction{
 		TxHash:    "0x98e9e65c1920a49f68cc523c8a5f5103d922fb8d250a859671b5a959aba9e2b1",
 		EthTxHash: "0xaed17cb61f9c446112f6c50163c65d1c42d022183c6de9652495fee35a208a4f",
 		Sender:    types.NewAddress("0x492064d08a3426fc15b7009301eb56bb285b6d08"),
