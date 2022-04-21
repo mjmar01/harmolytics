@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func EncodeTransaction(tx types.Transaction) (data []byte, err error) {
+func EncodeTransaction(tx *types.Transaction) (data []byte, err error) {
 	hash, _ := hex.DecodeString(strings.TrimPrefix(tx.TxHash, "0x"))
 	ethHash, _ := hex.DecodeString(strings.TrimPrefix(tx.EthTxHash, "0x"))
 	input, _ := hex.DecodeString(strings.TrimPrefix(tx.Input, "0x"))
@@ -22,18 +22,27 @@ func EncodeTransaction(tx types.Transaction) (data []byte, err error) {
 		}
 		logData, _ := hex.DecodeString(strings.TrimPrefix(log.Data, "0x"))
 		logs[i] = Log{
-			Index:   uint16(log.LogIndex),
-			Address: log.Address.Bytes,
-			Topics:  topics,
-			Data:    logData,
+			Index: uint16(log.LogIndex),
+			Address: Addr{
+				One: log.Address.OneAddress,
+				Hex: log.Address.HexAddress,
+			},
+			Topics: topics,
+			Data:   logData,
 		}
 	}
 
 	bTx := Transaction{
-		Hash:      hash,
-		EthHash:   ethHash,
-		Sender:    tx.Sender.Bytes,
-		Receiver:  tx.Receiver.Bytes,
+		Hash:    hash,
+		EthHash: ethHash,
+		Sender: Addr{
+			One: tx.Sender.OneAddress,
+			Hex: tx.Sender.HexAddress,
+		},
+		Receiver: Addr{
+			One: tx.Receiver.OneAddress,
+			Hex: tx.Receiver.HexAddress,
+		},
 		BlockNum:  uint32(tx.BlockNum),
 		TimeStamp: tx.Timestamp,
 		Amount:    tx.Value.Bytes(),
@@ -54,23 +63,32 @@ func EncodeTransaction(tx types.Transaction) (data []byte, err error) {
 	return
 }
 
-func DecodeTransaction(data []byte) (tx types.Transaction, err error) {
+func DecodeTransaction(data []byte) (tx *types.Transaction, err error) {
 	bTx := Transaction{}
 	err = bTx.DecodeBebop(bytes.NewReader(data))
 	if err != nil {
-		return types.Transaction{}, errors.Wrap(err, 0)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	hash := "0x" + hex.EncodeToString(bTx.Hash)
 	ethHash := "0x" + hex.EncodeToString(bTx.EthHash)
 	input := "0x" + hex.EncodeToString(bTx.Input)
 
-	sender := types.NewAddress("0x" + hex.EncodeToString(bTx.Sender))
-	receiver := types.NewAddress("0x" + hex.EncodeToString(bTx.Receiver))
+	sender := types.Address{
+		OneAddress: bTx.Sender.One,
+		HexAddress: bTx.Sender.Hex,
+	}
+	receiver := types.Address{
+		OneAddress: bTx.Receiver.One,
+		HexAddress: bTx.Receiver.Hex,
+	}
 
 	logs := make([]types.TransactionLog, len(bTx.Logs))
 	for i, log := range bTx.Logs {
-		addr := types.NewAddress("0x" + hex.EncodeToString(log.Address))
+		addr := types.Address{
+			OneAddress: log.Address.One,
+			HexAddress: log.Address.Hex,
+		}
 		logData := "0x" + hex.EncodeToString(log.Data)
 		var topics []string
 		for i := 32; i < len(log.Topics); i += 32 {
@@ -85,7 +103,7 @@ func DecodeTransaction(data []byte) (tx types.Transaction, err error) {
 		}
 	}
 
-	tx = types.Transaction{
+	tx = &types.Transaction{
 		TxHash:    hash,
 		EthTxHash: ethHash,
 		Sender:    sender,

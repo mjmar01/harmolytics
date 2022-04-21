@@ -1,8 +1,8 @@
 struct Transaction {
     byte[] hash;
     byte[] ethHash;
-    byte[] sender;
-    byte[] receiver;
+    Addr   sender;
+    Addr   receiver;
     uint32 blockNum;
     uint64 timeStamp;
     byte[] amount;
@@ -15,9 +15,14 @@ struct Transaction {
     byte   toShard;
 }
 
+struct Addr {
+    string one;
+    string hex;
+}
+
 struct Log {
     uint16 index;
-    byte[] address;
+    Addr   address;
     byte[] topics;
     byte[] data;
 }
