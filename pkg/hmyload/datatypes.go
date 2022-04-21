@@ -94,7 +94,7 @@ type transactionLogJson struct {
 // goFunc returns
 type goTx struct {
 	err error
-	tx  types.Transaction
+	tx  *types.Transaction
 }
 
 type goTk struct {
