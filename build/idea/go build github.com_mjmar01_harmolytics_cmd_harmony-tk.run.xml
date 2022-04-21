@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="go build github.com/mjmar01/harmolytics/cmd/harmony-tk" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+    <module name="harmolytics" />
+    <working_directory value="$PROJECT_DIR$/out" />
+    <go_parameters value="-o $PROJECT_DIR$/out/harmony-tk" />
+    <kind value="DIRECTORY" />
+    <directory value="$PROJECT_DIR$/cmd/harmony-tk" />
+    <filePath value="$PROJECT_DIR$/../harmolytics|$PROJECT_DIR$/cmd/harmony-tk/main.go" />
+    <output_directory value="$PROJECT_DIR$/out" />
+    <method v="2" />
+  </configuration>
+</component>
