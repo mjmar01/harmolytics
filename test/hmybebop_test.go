@@ -3,7 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
+	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/hmybebop"
 	"github.com/mjmar01/harmolytics/pkg/types"
 	"testing"
@@ -11,9 +11,24 @@ import (
 
 func TestTransactionBebop(t *testing.T) {
 	t.Parallel()
-	data, _ := hmybebop.EncodeTransaction(tx)
-	out, _ := hmybebop.DecodeTransaction(data)
-	fmt.Println(out.TxHash)
+	data, err := hmybebop.EncodeTransaction(tx)
+	if err != nil {
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
+	out, err := hmybebop.DecodeTransaction(data)
+	if err != nil {
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
+
+	if tx.TxHash != out.TxHash {
+		t.Errorf("Processed transaction does not have same TxHash: %s|%s", tx.TxHash, out.TxHash)
+	}
+	if tx.Sender.OneAddress != out.Sender.OneAddress {
+		t.Errorf("Processed transaction does not have same sender: %s|%s", tx.Sender.OneAddress, out.Sender.OneAddress)
+	}
+	if tx.Value.String() != out.Value.String() {
+		t.Errorf("Processed transaction does not have same value: %s|%s", tx.Value.String(), out.Value.String())
+	}
 }
 
 func BenchmarkBebopEncode(b *testing.B) {

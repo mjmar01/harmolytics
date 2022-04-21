@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/hmyload"
 	"github.com/mjmar01/harmolytics/pkg/types"
 	"testing"
@@ -11,12 +12,13 @@ func TestGetHistory(t *testing.T) {
 	l, err := hmyload.NewLoader(url, &hmyload.Opts{AdditionalConnections: 10})
 	defer l.Close()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
 	txs, err := l.GetTransactionsByWallet(types.NewAddress("one15vlc8yqstm9algcf6e94dxqx6y04jcsqjuc3gt"))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
+
 	if len(txs) < 3 {
 		t.Errorf("Response is missing transactions got %d expected 3", len(txs))
 	}
@@ -30,12 +32,13 @@ func TestGetFullTransaction(t *testing.T) {
 	l, err := hmyload.NewLoader(url, nil)
 	defer l.Close()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
 	txs, err := l.GetFullTransactions("0xf916accb28b218085da083f2df398d66f65ce175e32a38ea232debf708b2cc84", "0xf916accb28b218085da083f2df398d66f65ce175e32a38ea232debf708b2cc84")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
+
 	if txs[0].Status != 1 {
 		t.Errorf("Result did not contain correct Status: %v", txs[0].Status)
 	}
@@ -52,16 +55,20 @@ func TestGetFullTransaction(t *testing.T) {
 
 func TestGetTokens(t *testing.T) {
 	t.Parallel()
-	l, _ := hmyload.NewLoader(url, nil)
+	l, err := hmyload.NewLoader(url, nil)
 	defer l.Close()
+	if err != nil {
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
 	tks, err := l.GetTokens(
 		types.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
 		types.NewAddress("one1t8auuy8kl30ujqt2u229273r2eshvhzpu59sz6"),
 		types.NewAddress("one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua"),
 	)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
+
 	if len(tks) != 3 {
 		t.Errorf("Result did contain incorrect amount of tokens: %d", len(tks))
 	}

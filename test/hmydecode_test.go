@@ -13,14 +13,21 @@ const (
 
 func TestDecodeSwap(t *testing.T) {
 	t.Parallel()
-	ldr, _ := hmyload.NewLoader(url, nil)
-	txs, _ := ldr.GetFullTransactions(swapTx)
-	tx := txs[0]
-
-	swp, ok, err := hmydecode.DecodeSwap(tx)
+	ldr, err := hmyload.NewLoader(url, nil)
+	defer ldr.Close()
+	if err != nil {
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
+	txs, err := ldr.GetFullTransactions(swapTx)
+	if err != nil {
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
+	out := txs[0]
+	swp, ok, err := hmydecode.DecodeSwap(out)
 	if err != nil {
 		t.Error(err.(*errors.Error).ErrorStack())
 	}
+
 	if !ok {
 		t.Errorf("DecodeSwap incorrectly returned !ok")
 	}
@@ -38,16 +45,20 @@ func TestDecodeSwap(t *testing.T) {
 func TestDecodeTokenTransfers(t *testing.T) {
 	t.Parallel()
 	ldr, err := hmyload.NewLoader(url, nil)
+	defer ldr.Close()
 	if err != nil {
 		t.Error(err.(*errors.Error).ErrorStack())
 	}
-	txs, _ := ldr.GetFullTransactions(swapTx)
-	tx := txs[0]
+	txs, err := ldr.GetFullTransactions(swapTx)
+	if err != nil {
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
+	out := txs[0]
+	tkTxs, err := hmydecode.DecodeTokenTransaction(out)
+	if err != nil {
+		t.Error(err.(*errors.Error).ErrorStack())
+	}
 
-	tkTxs, err := hmydecode.DecodeTokenTransaction(tx)
-	if err != nil {
-		t.Error(err.(*errors.Error).ErrorStack())
-	}
 	if len(tkTxs) != 3 {
 		t.Errorf("DecodeTokenTransaction returned incorrect number of transfers: %d", len(tkTxs))
 	}

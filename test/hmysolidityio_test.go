@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/hmysolidityio"
 	"github.com/mjmar01/harmolytics/pkg/types"
 	"math/big"
@@ -17,8 +18,9 @@ const (
 func TestDecodeAddress(t *testing.T) {
 	a, err := hmysolidityio.DecodeAddress(testSwapInput, 3)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
+
 	if a.OneAddress != "one15vlc8yqstm9algcf6e94dxqx6y04jcsqjuc3gt" {
 		t.Errorf("Output does not have expected address: %s", a.OneAddress)
 	}
@@ -27,9 +29,13 @@ func TestDecodeAddress(t *testing.T) {
 func TestDecodeInt(t *testing.T) {
 	i1, err := hmysolidityio.DecodeInt(testSwapInput, 0)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
-	i2, _ := hmysolidityio.DecodeInt(testSwapInput, 1)
+	i2, err := hmysolidityio.DecodeInt(testSwapInput, 1)
+	if err != nil {
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
+
 	if i1.Int64() != 42 {
 		t.Errorf("Output for position 0 did contain incorrect value: %d", i1)
 	}
@@ -41,8 +47,9 @@ func TestDecodeInt(t *testing.T) {
 func TestDecodeString(t *testing.T) {
 	s, err := hmysolidityio.DecodeString(testString, 0)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
+
 	if s != "Hi mom!" {
 		t.Errorf("Output did contain incorrect string: %s", s)
 	}
@@ -51,14 +58,15 @@ func TestDecodeString(t *testing.T) {
 func TestDecodeArray(t *testing.T) {
 	arr, err := hmysolidityio.DecodeArray(testSwapInput, 2)
 	if err != nil {
-		t.Error(err)
-	}
-	if len(arr) != 2 {
-		t.Errorf("Output slice has incorrect length: %d", len(arr))
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
 	addr, err := hmysolidityio.DecodeAddress(hex.EncodeToString(arr[0]), 0)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
+	}
+
+	if len(arr) != 2 {
+		t.Errorf("Output slice has incorrect length: %d", len(arr))
 	}
 	if addr.OneAddress != "one1afvfayllrzc6ru0fhtr7705x4d32mhrewz4c77" {
 		t.Errorf("Output did contain incorrect value for address 0: %s", addr.OneAddress)
@@ -87,8 +95,9 @@ func TestEncodeAll(t *testing.T) {
 		"~FIN~", // 6
 	)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
+
 	if s != "0000000000000000000000000000000000000000000000000000000000000011000000000000000000000000ea589e93ff18b1a1f1e9bac7ef3e86ab62addc7900000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000000354c6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6e6720746573740000000000000000000000000000000000000000000000000000000000000000000000000000000000000a53686f72742074657374000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ea589e93ff18b1a1f1e9bac7ef3e86ab62addc79000000000000000000000000ea589e93ff18b1a1f1e9bac7ef3e86ab62addc790000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000026000000000000000000000000000000000000000000000000000000000000000057e46494e7e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000002c00000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000001149206c6f766520726563757273696f6e21000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c496e63657074696f6e2121210000000000000000000000000000000000000000" {
 		readHelper := ""
 		for {
