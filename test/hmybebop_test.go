@@ -36,7 +36,7 @@ func BenchmarkGobEncode(b *testing.B) {
 }
 
 func BenchmarkBebopDecode(b *testing.B) {
-	var tmp types.Transaction
+	var tmp *types.Transaction
 	for i := 0; i < b.N; i++ {
 		tmp, _ = hmybebop.DecodeTransaction(txBebop)
 	}
