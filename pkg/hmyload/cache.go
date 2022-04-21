@@ -1,14 +1,12 @@
 package hmyload
 
 import (
-	"fmt"
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/hmybebop"
 	"github.com/mjmar01/harmolytics/pkg/types"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
@@ -36,9 +34,7 @@ func (l *Loader) saveTransaction(tx *types.Transaction) (err error) {
 
 func (l *Loader) checkTransaction(hash string) (tx *types.Transaction, ok bool) {
 	load.Do(func() {
-		t1 := time.Now()
 		loadIntoMemory(l)
-		fmt.Println(time.Since(t1))
 	})
 	lock.RLock()
 	txPtr, inCache := inMemory[hash]
