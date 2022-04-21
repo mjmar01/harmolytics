@@ -166,8 +166,8 @@ func AnalyzeFees(swap *types.Swap, reserves []types.HistoricLiquidityRatio, tx t
 		for i := len(tokenPath) - 1; i > 0; i-- {
 			var reserveIn, reserveOut *big.Int
 			s := hex.EncodeToString(tokenPath[i])[24:]
-			a := hex.EncodeToString(reserves[i-1].LP.TokenA.Address.Bytes)
-			b := hex.EncodeToString(reserves[i-1].LP.TokenB.Address.Bytes)
+			a := reserves[i-1].LP.TokenA.Address.HexAddress[2:]
+			b := reserves[i-1].LP.TokenB.Address.HexAddress[2:]
 			if s == a {
 				reserveIn = reserves[i-1].ReserveB
 				reserveOut = reserves[i-1].ReserveA
@@ -185,8 +185,8 @@ func AnalyzeFees(swap *types.Swap, reserves []types.HistoricLiquidityRatio, tx t
 		for i := 0; i < len(tokenPath)-1; i++ {
 			var reserveIn, reserveOut *big.Int
 			s := hex.EncodeToString(tokenPath[i])[24:]
-			a := hex.EncodeToString(reserves[i].LP.TokenA.Address.Bytes)
-			b := hex.EncodeToString(reserves[i].LP.TokenB.Address.Bytes)
+			a := reserves[i].LP.TokenA.Address.HexAddress[2:]
+			b := reserves[i].LP.TokenB.Address.HexAddress[2:]
 			if s == a {
 				reserveIn = reserves[i].ReserveA
 				reserveOut = reserves[i].ReserveB
