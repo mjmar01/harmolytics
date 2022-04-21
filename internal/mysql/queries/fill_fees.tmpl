@@ -1,5 +1,0 @@
-{{range .Swaps}}
-UPDATE harmolytics_profile_{{$.Profile}}.swaps
-SET fee_amount = {{.FeeAmount}}, fee_token = '{{.FeeToken}}'
-WHERE hash = '{{.TxHash}}';
-{{end}}
