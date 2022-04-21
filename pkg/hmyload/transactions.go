@@ -79,8 +79,8 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 	bodiesByConn, idx := make([][]rpc.Body, l.uniqueConnCount), 0
 	for _, hash := range hashes {
 		if pTx, ok := l.checkTransaction(hash); ok {
-			hmyMap[pTx.TxHash] = &pTx
-			ethMap[pTx.EthTxHash] = &pTx
+			hmyMap[pTx.TxHash] = pTx
+			ethMap[pTx.EthTxHash] = pTx
 			foundInCache++
 		} else {
 			b := l.uniqueConns[idx].NewBody(transactionByHashMethod, hash)
@@ -117,7 +117,7 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 				//TODO Get method information with caching
 				ch <- goTx{
 					err: nil,
-					tx:  tx,
+					tx:  &tx,
 				}
 			}
 		}(conn, bodiesByConn[i])
@@ -128,8 +128,8 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 		if out.err != nil {
 			return txs, out.err
 		}
-		hmyMap[out.tx.TxHash] = &out.tx
-		ethMap[out.tx.EthTxHash] = &out.tx
+		hmyMap[out.tx.TxHash] = out.tx
+		ethMap[out.tx.EthTxHash] = out.tx
 		err = l.saveTransaction(out.tx)
 		if err != nil {
 			return
