@@ -29,7 +29,7 @@ func (l *Loader) GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Tr
 	// Split into groups and let pages overlap a bit
 	pageSize, overlap := 50000, 50
 	// Get histories
-	txMap := map[string]harmony.Transaction{}
+	txMap := map[string]*harmony.Transaction{}
 	for i := 0; i < txCount; i += pageSize {
 		res, err := l.defaultConn.RawCall(transactionHistoryMethod, map[string]interface{}{
 			"address":   addr.OneAddress,
@@ -48,7 +48,7 @@ func (l *Loader) GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Tr
 			return nil, err
 		}
 		for _, hash := range hashes {
-			txMap[hash] = harmony.Transaction{}
+			txMap[hash] = nil
 		}
 	}
 	// Get transactions by hash
@@ -74,19 +74,27 @@ func (l *Loader) GetTransactionsByWallet(addr harmony.Address) (txs []harmony.Tr
 func (l *Loader) GetFullTransactions(hashes ...string) (txs []harmony.Transaction, err error) {
 	// Prepare requests
 	txs = make([]harmony.Transaction, len(hashes))
+	ethMap, hmyMap := map[string]*harmony.Transaction{}, map[string]*harmony.Transaction{}
+	foundInCache := 0
 	bodiesByConn, idx := make([][]rpc.Body, l.uniqueConnCount), 0
 	for _, hash := range hashes {
-		b := l.uniqueConns[idx].NewBody(transactionByHashMethod, hash)
-		bodiesByConn[idx] = append(bodiesByConn[idx], b)
-		b = l.uniqueConns[idx].NewBody(transactionReceiptMethod, hash)
-		bodiesByConn[idx] = append(bodiesByConn[idx], b)
-		idx++
-		if idx == l.uniqueConnCount {
-			idx = 0
+		if pTx, ok := l.checkTransaction(hash); ok {
+			hmyMap[pTx.TxHash] = &pTx
+			ethMap[pTx.EthTxHash] = &pTx
+			foundInCache++
+		} else {
+			b := l.uniqueConns[idx].NewBody(transactionByHashMethod, hash)
+			bodiesByConn[idx] = append(bodiesByConn[idx], b)
+			b = l.uniqueConns[idx].NewBody(transactionReceiptMethod, hash)
+			bodiesByConn[idx] = append(bodiesByConn[idx], b)
+			idx++
+			if idx == l.uniqueConnCount {
+				idx = 0
+			}
 		}
 	}
 	// Do requests across unique nodes
-	ch := make(chan goTx, len(hashes))
+	ch := make(chan goTx, len(hashes)-foundInCache)
 	for i, conn := range l.uniqueConns {
 		go func(rpc *rpc.Rpc, bodies []rpc.Body) {
 			ress, err := rpc.RawBatchCall(bodies)
@@ -115,12 +123,27 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []harmony.Transactio
 		}(conn, bodiesByConn[i])
 	}
 	// Read output
-	for i := 0; i < len(hashes); i++ {
+	for i := foundInCache; i < len(hashes); i++ {
 		out := <-ch
 		if out.err != nil {
 			return txs, out.err
 		}
-		txs[i] = out.tx
+		hmyMap[out.tx.TxHash] = &out.tx
+		ethMap[out.tx.EthTxHash] = &out.tx
+		err = l.saveTransaction(out.tx)
+		if err != nil {
+			return
+		}
+	}
+	for i, hash := range hashes {
+		txPtr, ok := ethMap[hash]
+		if !ok {
+			txPtr, ok = hmyMap[hash]
+			if !ok {
+				return nil, errors.Errorf("Given hash (%s) was not found in list of results", hash)
+			}
+		}
+		txs[i] = *txPtr
 	}
 	return
 }
@@ -144,6 +167,7 @@ func readTxInfoFromResponse(data []byte) (tx harmony.Transaction, err error) {
 	}
 	tx = harmony.Transaction{
 		TxHash:    t.TxHash,
+		EthTxHash: t.EthTxHash,
 		Sender:    harmony.NewAddress(t.Sender),
 		Receiver:  harmony.NewAddress(t.Receiver),
 		BlockNum:  t.BlockNum,
@@ -151,7 +175,7 @@ func readTxInfoFromResponse(data []byte) (tx harmony.Transaction, err error) {
 		Value:     value,
 		Method:    method,
 		Input:     t.Input,
-		GasAmount: t.GasAmount,
+		GasAmount: uint32(t.GasAmount),
 		GasPrice:  gasPrice,
 		ShardID:   t.ShardID,
 		ToShardID: t.ToShardID,

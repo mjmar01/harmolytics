@@ -11,6 +11,7 @@ import (
 type Address struct {
 	OneAddress string
 	HexAddress string
+	Bytes      []byte
 }
 
 //</editor-fold>
@@ -54,6 +55,7 @@ type TransactionLog struct {
 // Transaction contains all relevant information of a transaction
 type Transaction struct {
 	TxHash    string
+	EthTxHash string
 	Sender    Address
 	Receiver  Address
 	BlockNum  uint64
@@ -63,7 +65,7 @@ type Transaction struct {
 	Input     string
 	Logs      []TransactionLog
 	Status    int
-	GasAmount uint64
+	GasAmount uint32
 	GasPrice  *big.Int
 	ShardID   uint
 	ToShardID uint

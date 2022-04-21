@@ -5,7 +5,9 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/harmony"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
+	"github.com/syndtr/goleveldb/leveldb"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -19,7 +21,14 @@ type Loader struct {
 	uniqueConnCount int
 	connByPeer      map[string][]*rpc.Rpc
 	uniqueConns     []*rpc.Rpc
+	cache           *leveldb.DB
+	cachePath       string
 }
+
+var openCachesInit sync.Once
+var openCaches map[string]*leveldb.DB
+var openCacheTracker map[string]int
+var openCacheLock sync.Mutex
 
 // Opts contains optional parameters for the NewLoader function
 type Opts struct {
@@ -41,10 +50,12 @@ func (o *Opts) defaults() (out *Opts, err error) {
 		out.RpcTimeout = time.Minute * 2
 	}
 	if out.CacheDir == "" {
-		out.CacheDir, err = os.UserCacheDir()
+		var dir string
+		dir, err = os.UserCacheDir()
 		if err != nil {
 			return nil, errors.Wrap(err, 0)
 		}
+		out.CacheDir = dir + "/harmony-tk"
 	}
 	return
 }
@@ -54,6 +65,7 @@ func (o *Opts) defaults() (out *Opts, err error) {
 //<editor-fold desc="Internal types">
 type transactionInfoJson struct {
 	TxHash    string      `json:"hash"`
+	EthTxHash string      `json:"ethHash"`
 	Sender    string      `json:"from"`
 	Timestamp uint64      `json:"timestamp"`
 	GasAmount uint64      `json:"gas"`

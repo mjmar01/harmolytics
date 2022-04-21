@@ -24,6 +24,10 @@ func NewAddress(addr string) (a Address) {
 			panic(err)
 		}
 	}
+	a.Bytes, err = hex.DecodeString(strings.TrimPrefix(a.HexAddress, "0x"))
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
@@ -41,6 +45,10 @@ func CheckNewAddress(addr string) (a Address, err error) {
 		if err != nil {
 			return
 		}
+	}
+	a.Bytes, err = hex.DecodeString(strings.TrimPrefix(a.HexAddress, "0x"))
+	if err != nil {
+		return Address{}, errors.Wrap(err, 0)
 	}
 	return
 }
