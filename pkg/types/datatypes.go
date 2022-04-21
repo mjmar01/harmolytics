@@ -11,7 +11,6 @@ import (
 type Address struct {
 	OneAddress string
 	HexAddress string
-	Bytes      []byte
 }
 
 //</editor-fold>
