@@ -131,3 +131,32 @@ func DecodeTransaction(data []byte) (tx *types.Transaction, err error) {
 	}
 	return
 }
+
+func EncodeMethod(m *types.Method) (data []byte, err error) {
+	bM := Method{
+		Signature: m.Signature,
+		Name:      m.Name,
+		Params:    m.Parameters,
+	}
+	var buff bytes.Buffer
+	err = bM.EncodeBebop(&buff)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+	data = buff.Bytes()
+	return
+}
+
+func DecodeMethod(data []byte) (m *types.Method, err error) {
+	bM := Method{}
+	err = bM.DecodeBebop(bytes.NewReader(data))
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+	m = &types.Method{
+		Signature:  bM.Signature,
+		Name:       bM.Name,
+		Parameters: bM.Params,
+	}
+	return
+}
