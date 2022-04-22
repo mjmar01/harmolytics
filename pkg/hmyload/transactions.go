@@ -59,13 +59,16 @@ func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transa
 		i++
 	}
 	// Split into pages to avoid node stress
+	txs = make([]types.Transaction, len(hashes))
 	for i := 0; i < len(hashes); i += 5000 {
 		size := int(math.Min(float64(len(hashes)-i), 5000))
 		txsPart, err := l.GetFullTransactions(hashes[i : i+size]...)
 		if err != nil {
 			return nil, err
 		}
-		txs = append(txs, txsPart...)
+		for j, tx := range txsPart {
+			txs[i+j] = tx
+		}
 	}
 	return
 }
