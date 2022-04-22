@@ -17,6 +17,7 @@ func NewCache(opts *Opts) (newCache *Cache, err error) {
 
 	if opts.PreLoadTransactions {
 		newCache.loadTxMemory()
+		newCache.loadMMemory()
 	}
 	return
 }
