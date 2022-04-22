@@ -2,13 +2,8 @@ package cache
 
 import (
 	"github.com/go-errors/errors"
-	"github.com/mjmar01/harmolytics/pkg/types"
 	"github.com/syndtr/goleveldb/leveldb"
-	"sync"
 )
-
-var txMemory = map[string]*types.Transaction{}
-var txMutex = sync.RWMutex{}
 
 func NewCache(opts *Opts) (newCache *Cache, err error) {
 	newCache = new(Cache)

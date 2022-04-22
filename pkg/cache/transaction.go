@@ -7,9 +7,16 @@ import (
 	"sync"
 )
 
+var txMemoryByEthHash = map[string]*types.Transaction{}
+var txMemoryByHash = map[string]*types.Transaction{}
+var txMutex = sync.RWMutex{}
+
 func (c *Cache) GetTransaction(hash string) (tx *types.Transaction, ok bool) {
 	txMutex.RLock()
-	tx, ok = txMemory[hash]
+	tx, ok = txMemoryByEthHash[hash]
+	if !ok {
+		tx, ok = txMemoryByHash[hash]
+	}
 	txMutex.RUnlock()
 	if ok {
 		return
@@ -23,14 +30,15 @@ func (c *Cache) GetTransaction(hash string) (tx *types.Transaction, ok bool) {
 		return nil, false
 	}
 	txMutex.Lock()
-	txMemory[hash] = tx
+	txMemoryByEthHash[tx.EthTxHash] = tx
+	txMemoryByHash[tx.TxHash] = tx
 	txMutex.Unlock()
 	return tx, true
 }
 
 func (c *Cache) SetTransaction(tx *types.Transaction) {
 	txMutex.Lock()
-	txMemory[tx.EthTxHash] = tx
+	txMemoryByEthHash[tx.EthTxHash] = tx
 	txMutex.Unlock()
 	v, err := hmybebop.EncodeTransaction(tx)
 	if err != nil {
@@ -50,7 +58,8 @@ func (c *Cache) loadTxMemory() {
 			wg.Add(1)
 			txPtr, _ := hmybebop.DecodeTransaction(in)
 			txMutex.Lock()
-			txMemory[txPtr.EthTxHash] = txPtr
+			txMemoryByEthHash[txPtr.EthTxHash] = txPtr
+			txMemoryByHash[txPtr.TxHash] = txPtr
 			txMutex.Unlock()
 			wg.Done()
 		}(cp)
