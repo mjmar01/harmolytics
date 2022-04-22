@@ -9,7 +9,7 @@ import (
 
 func TestGetHistory(t *testing.T) {
 	t.Parallel()
-	l, err := hmyload.NewLoader(url, &hmyload.Opts{AdditionalConnections: 10})
+	l, err := hmyload.NewLoader(url, &hmyload.Opts{AdditionalConnections: 10, ExistingCache: centralCache})
 	defer l.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
@@ -29,7 +29,7 @@ func TestGetHistory(t *testing.T) {
 
 func TestGetFullTransaction(t *testing.T) {
 	t.Parallel()
-	l, err := hmyload.NewLoader(url, nil)
+	l, err := hmyload.NewLoader(url, &hmyload.Opts{ExistingCache: centralCache})
 	defer l.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
@@ -55,7 +55,7 @@ func TestGetFullTransaction(t *testing.T) {
 
 func TestGetTokens(t *testing.T) {
 	t.Parallel()
-	l, err := hmyload.NewLoader(url, nil)
+	l, err := hmyload.NewLoader(url, &hmyload.Opts{ExistingCache: centralCache})
 	defer l.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
