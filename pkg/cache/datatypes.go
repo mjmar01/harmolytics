@@ -7,8 +7,6 @@ import (
 	"sync"
 )
 
-var txPrefix = []byte{0x01}
-
 //<editor-fold desc="External types">
 
 type Cache struct {

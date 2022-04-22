@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+var txPrefix = []byte{0x01}
 var txMemoryByEthHash = map[string]*types.Transaction{}
 var txMemoryByHash = map[string]*types.Transaction{}
 var txMutex = sync.RWMutex{}
