@@ -34,7 +34,7 @@ func (l *Loader) GetTokens(addrs ...types.Address) (tks []types.Token, err error
 	// Do requests
 	ch := make(chan goTk, len(addrs))
 	for i, conn := range l.uniqueConns {
-		go func(rpc *rpc.Rpc, bodies []rpc.Body, addrs []types.Address) {
+		go func(rpc *rpc.RPC, bodies []rpc.Body, addrs []types.Address) {
 			ress, err := rpc.BatchCall(bodies)
 			if err != nil {
 				ch <- goTk{err: err}
