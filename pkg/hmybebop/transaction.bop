@@ -7,12 +7,19 @@ struct Transaction {
     uint64 timeStamp;
     byte[] amount;
     byte[] input;
+    Method method;
     Log[]  logs;
     byte   status;
     uint32 gasAmount;
     byte[] gasPrice;
     byte   shard;
     byte   toShard;
+}
+
+struct Method {
+    string signature;
+    string name;
+    string[] params;
 }
 
 struct Addr {

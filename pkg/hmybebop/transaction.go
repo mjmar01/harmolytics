@@ -19,6 +19,7 @@ type Transaction struct {
 	TimeStamp uint64
 	Amount    []byte
 	Input     []byte
+	Method    Method
 	Logs      []Log
 	Status    byte
 	GasAmount uint32
@@ -53,6 +54,8 @@ func (bbp Transaction) MarshalBebopTo(buf []byte) int {
 	at += 4
 	copy(buf[at:at+len(bbp.Input)], bbp.Input)
 	at += len(bbp.Input)
+	(bbp.Method).MarshalBebopTo(buf[at:])
+	at += (bbp.Method).Size()
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Logs)))
 	at += 4
 	for _, v1 := range bbp.Logs {
@@ -136,6 +139,11 @@ func (bbp *Transaction) UnmarshalBebop(buf []byte) (err error) {
 	}
 	copy(bbp.Input, buf[at:at+len(bbp.Input)])
 	at += len(bbp.Input)
+	bbp.Method, err = MakeMethodFromBytes(buf[at:])
+	if err != nil {
+		return err
+	}
+	at += (bbp.Method).Size()
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
@@ -209,6 +217,10 @@ func (bbp Transaction) EncodeBebop(iow io.Writer) (err error) {
 	for _, elem := range bbp.Input {
 		iohelp.WriteByte(w, elem)
 	}
+	err = (bbp.Method).EncodeBebop(w)
+	if err != nil {
+		return err
+	}
 	iohelp.WriteUint32(w, uint32(len(bbp.Logs)))
 	for _, elem := range bbp.Logs {
 		err = (elem).EncodeBebop(w)
@@ -255,6 +267,10 @@ func (bbp *Transaction) DecodeBebop(ior io.Reader) (err error) {
 	for i1 := range bbp.Input {
 		(bbp.Input[i1]) = iohelp.ReadByte(r)
 	}
+	(bbp.Method), err = MakeMethod(r)
+	if err != nil {
+		return err
+	}
 	bbp.Logs = make([]Log, iohelp.ReadUint32(r))
 	for i1 := range bbp.Logs {
 		(bbp.Logs[i1]), err = MakeLog(r)
@@ -287,6 +303,7 @@ func (bbp Transaction) Size() int {
 	bodyLen += len(bbp.Amount) * 1
 	bodyLen += 4
 	bodyLen += len(bbp.Input) * 1
+	bodyLen += (bbp.Method).Size()
 	bodyLen += 4
 	for _, elem := range bbp.Logs {
 		bodyLen += (elem).Size()
@@ -314,6 +331,113 @@ func MakeTransaction(r iohelp.ErrorReader) (Transaction, error) {
 
 func MakeTransactionFromBytes(buf []byte) (Transaction, error) {
 	v := Transaction{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+var _ bebop.Record = &Method{}
+
+type Method struct {
+	Signature string
+	Name      string
+	Params    []string
+}
+
+func (bbp Method) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Signature)))
+	copy(buf[at+4:at+4+len(bbp.Signature)], []byte(bbp.Signature))
+	at += 4 + len(bbp.Signature)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Name)))
+	copy(buf[at+4:at+4+len(bbp.Name)], []byte(bbp.Name))
+	at += 4 + len(bbp.Name)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Params)))
+	at += 4
+	for _, v1 := range bbp.Params {
+		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
+		copy(buf[at+4:at+4+len(v1)], []byte(v1))
+		at += 4 + len(v1)
+	}
+	return at
+}
+
+func (bbp *Method) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	bbp.Signature, err = iohelp.ReadStringBytes(buf[at:])
+	if err != nil {
+		return err
+	}
+	at += 4 + len(bbp.Signature)
+	bbp.Name, err = iohelp.ReadStringBytes(buf[at:])
+	if err != nil {
+		return err
+	}
+	at += 4 + len(bbp.Name)
+	if len(buf[at:]) < 4 {
+		return io.ErrUnexpectedEOF
+	}
+	bbp.Params = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.Params {
+		(bbp.Params)[i1], err = iohelp.ReadStringBytes(buf[at:])
+		if err != nil {
+			return err
+		}
+		at += 4 + len((bbp.Params)[i1])
+	}
+	return nil
+}
+
+func (bbp Method) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(len(bbp.Signature)))
+	w.Write([]byte(bbp.Signature))
+	iohelp.WriteUint32(w, uint32(len(bbp.Name)))
+	w.Write([]byte(bbp.Name))
+	iohelp.WriteUint32(w, uint32(len(bbp.Params)))
+	for _, elem := range bbp.Params {
+		iohelp.WriteUint32(w, uint32(len(elem)))
+		w.Write([]byte(elem))
+	}
+	return w.Err
+}
+
+func (bbp *Method) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bbp.Signature = iohelp.ReadString(r)
+	bbp.Name = iohelp.ReadString(r)
+	bbp.Params = make([]string, iohelp.ReadUint32(r))
+	for i1 := range bbp.Params {
+		(bbp.Params[i1]) = iohelp.ReadString(r)
+	}
+	return r.Err
+}
+
+func (bbp Method) Size() int {
+	bodyLen := 0
+	bodyLen += 4 + len(bbp.Signature)
+	bodyLen += 4 + len(bbp.Name)
+	bodyLen += 4
+	for _, elem := range bbp.Params {
+		bodyLen += 4 + len(elem)
+	}
+	return bodyLen
+}
+
+func (bbp Method) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeMethod(r iohelp.ErrorReader) (Method, error) {
+	v := Method{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func MakeMethodFromBytes(buf []byte) (Method, error) {
+	v := Method{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
