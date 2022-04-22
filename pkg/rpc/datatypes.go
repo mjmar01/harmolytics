@@ -12,8 +12,8 @@ const (
 	ReceivedTx = "RECEIVED"
 )
 
-// Rpc struct to interact with RPC endpoints
-type Rpc struct {
+// RPC struct to interact with RPC endpoints
+type RPC struct {
 	PeerId  string
 	timeout time.Duration
 	ws      *websocket.Conn
@@ -25,14 +25,16 @@ type Opts struct {
 	Timeout time.Duration
 }
 
-func (o *Opts) defaults() *Opts {
-	if o == nil {
-		o = new(Opts)
+func defaults(in *Opts) (out *Opts) {
+	if in == nil {
+		out = new(Opts)
+	} else {
+		out = in
 	}
-	if o.Timeout == 0 {
-		o.Timeout = time.Minute * 2
+	if out.Timeout == 0 {
+		out.Timeout = time.Minute * 2
 	}
-	return o
+	return
 }
 
 // Body represents an RPC calls body input
@@ -46,7 +48,6 @@ type Body struct {
 //</editor-fold>
 
 //<editor-fold desc="Internal types">
-// Generic RPC results
 type rpcReplyG struct {
 	RpcVersion string      `json:"jsonrpc"`
 	Id         int         `json:"id"`
@@ -56,7 +57,7 @@ type rpcReplyG struct {
 // goFunc returns
 type goRpcs struct {
 	err error
-	rpc *Rpc
+	rpc *RPC
 }
 
 //</editor-fold>
