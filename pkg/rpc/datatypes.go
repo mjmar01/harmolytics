@@ -20,7 +20,7 @@ type RPC struct {
 	queryId int
 }
 
-// Opts contains optional parameters for the NewRpc function
+// Opts contains optional parameters for the NewRPC function
 type Opts struct {
 	Timeout time.Duration
 }

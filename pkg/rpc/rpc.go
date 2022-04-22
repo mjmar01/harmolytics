@@ -11,8 +11,8 @@ const (
 	NodeMetadataMethod = "hmyv2_getNodeMetadata"
 )
 
-// NewRpc creates a new RPC struct
-func NewRpc(url string, opts *Opts) (r *RPC, err error) {
+// NewRPC creates a new RPC struct
+func NewRPC(url string, opts *Opts) (r *RPC, err error) {
 	opts = defaults(opts)
 	r = new(RPC)
 	var rsp *http.Response
@@ -40,7 +40,7 @@ func NewRpcs(url string, count int, opts *Opts) (rs []*RPC, err error) {
 	rs, ch := make([]*RPC, count), make(chan goRpcs, count)
 	for i := 0; i < count; i++ {
 		go func() {
-			r, err := NewRpc(url, opts)
+			r, err := NewRPC(url, opts)
 			ch <- goRpcs{
 				err: err,
 				rpc: r,

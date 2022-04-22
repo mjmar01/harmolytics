@@ -18,12 +18,12 @@ const (
 
 func TestNewRpc(t *testing.T) {
 	t.Parallel()
-	r, err := rpc.NewRpc(url, nil)
+	r, err := rpc.NewRPC(url, nil)
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
 	r.Close()
-	r, err = rpc.NewRpc(url, &rpc.Opts{Timeout: time.Minute * 3})
+	r, err = rpc.NewRPC(url, &rpc.Opts{Timeout: time.Minute * 3})
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
@@ -44,7 +44,7 @@ func TestNewRpc(t *testing.T) {
 
 func TestCall(t *testing.T) {
 	t.Parallel()
-	r, err := rpc.NewRpc(url, nil)
+	r, err := rpc.NewRPC(url, nil)
 	defer r.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
@@ -62,7 +62,7 @@ func TestCall(t *testing.T) {
 
 func TestBatchCall(t *testing.T) {
 	t.Parallel()
-	r, err := rpc.NewRpc(url, nil)
+	r, err := rpc.NewRPC(url, nil)
 	defer r.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
@@ -92,7 +92,7 @@ func TestBatchCall(t *testing.T) {
 
 func TestRawCall(t *testing.T) {
 	t.Parallel()
-	r, err := rpc.NewRpc(url, nil)
+	r, err := rpc.NewRPC(url, nil)
 	defer r.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
@@ -110,7 +110,7 @@ func TestRawCall(t *testing.T) {
 
 func TestRawBatchCall(t *testing.T) {
 	t.Parallel()
-	r, err := rpc.NewRpc(url, nil)
+	r, err := rpc.NewRPC(url, nil)
 	defer r.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
