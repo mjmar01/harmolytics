@@ -18,7 +18,7 @@ const (
 	transactionHistoryMethod = "hmyv2_getTransactionsHistory"
 )
 
-// GetTransactionsByWallet returns a list of all successful Transaction for a given harmony.Address
+// GetTransactionsByWallet returns a list of all successful Transaction for a given types.Address
 func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transaction, err error) {
 	// Get total number of transactions and prepare slice with a bit overhead
 	c, err := l.defaultConn.Call(transactionCountMethod, addr.OneAddress, rpc.AllTx)
@@ -29,7 +29,7 @@ func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transa
 	// Split into groups and let pages overlap a bit
 	pageSize, overlap := 50000, 50
 	// Get histories
-	txMap := map[string]*types.Transaction{}
+	uniqueHashes := map[string]bool{}
 	for i := 0; i < txCount; i += pageSize {
 		res, err := l.defaultConn.RawCall(transactionHistoryMethod, map[string]interface{}{
 			"address":   addr.OneAddress,
@@ -48,13 +48,13 @@ func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transa
 			return nil, err
 		}
 		for _, hash := range hashes {
-			txMap[hash] = nil
+			uniqueHashes[hash] = true
 		}
 	}
 	// Get transactions by hash
-	hashes := make([]string, len(txMap))
+	hashes := make([]string, len(uniqueHashes))
 	i := 0
-	for hash := range txMap {
+	for hash := range uniqueHashes {
 		hashes[i] = hash
 		i++
 	}
@@ -74,15 +74,16 @@ func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transa
 func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction, err error) {
 	// Prepare requests
 	txs = make([]types.Transaction, len(hashes))
-	ethMap, hmyMap := map[string]*types.Transaction{}, map[string]*types.Transaction{}
-	foundInCache := 0
-	bodiesByConn, idx := make([][]rpc.Body, l.uniqueConnCount), 0
+	txByEthHash, txByHash := map[string]*types.Transaction{}, map[string]*types.Transaction{}
+	bodiesByConn, idx, foundInCache := make([][]rpc.Body, l.uniqueConnCount), 0, 0
 	for _, hash := range hashes {
-		if pTx, ok := l.checkTransaction(hash); ok {
-			hmyMap[pTx.TxHash] = pTx
-			ethMap[pTx.EthTxHash] = pTx
+		if pTx, ok := l.cache.GetTransaction(hash); ok {
+			// Cache hit
+			txByHash[pTx.TxHash] = pTx
+			txByEthHash[pTx.EthTxHash] = pTx
 			foundInCache++
 		} else {
+			// Cache miss
 			b := l.uniqueConns[idx].NewBody(transactionByHashMethod, hash)
 			bodiesByConn[idx] = append(bodiesByConn[idx], b)
 			b = l.uniqueConns[idx].NewBody(transactionReceiptMethod, hash)
@@ -96,7 +97,7 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 	// Do requests across unique nodes
 	ch := make(chan goTx, len(hashes)-foundInCache)
 	for i, conn := range l.uniqueConns {
-		go func(rpc *rpc.Rpc, bodies []rpc.Body) {
+		go func(rpc *rpc.RPC, bodies []rpc.Body) {
 			ress, err := rpc.RawBatchCall(bodies)
 			if err != nil {
 				ch <- goTx{err: err}
@@ -117,7 +118,7 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 				//TODO Get method information with caching
 				ch <- goTx{
 					err: nil,
-					tx:  &tx,
+					tx:  tx,
 				}
 			}
 		}(conn, bodiesByConn[i])
@@ -128,17 +129,14 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 		if out.err != nil {
 			return txs, out.err
 		}
-		hmyMap[out.tx.TxHash] = out.tx
-		ethMap[out.tx.EthTxHash] = out.tx
-		err = l.saveTransaction(out.tx)
-		if err != nil {
-			return
-		}
+		txByHash[out.tx.TxHash] = out.tx
+		txByEthHash[out.tx.EthTxHash] = out.tx
+		l.cache.SetTransaction(out.tx)
 	}
 	for i, hash := range hashes {
-		txPtr, ok := ethMap[hash]
+		txPtr, ok := txByEthHash[hash]
 		if !ok {
-			txPtr, ok = hmyMap[hash]
+			txPtr, ok = txByHash[hash]
 			if !ok {
 				return nil, errors.Errorf("Given hash (%s) was not found in list of results", hash)
 			}
@@ -148,12 +146,12 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 	return
 }
 
-func readTxInfoFromResponse(data []byte) (tx types.Transaction, err error) {
+func readTxInfoFromResponse(data []byte) (tx *types.Transaction, err error) {
 	// Read JSON into transaction
 	var t transactionInfoJson
 	err = json.Unmarshal(data, &t)
 	if err != nil {
-		return types.Transaction{}, errors.Wrap(err, 0)
+		return nil, errors.Wrap(err, 0)
 	}
 	value := new(big.Int)
 	value.SetString(t.Value.String(), 10)
@@ -165,7 +163,7 @@ func readTxInfoFromResponse(data []byte) (tx types.Transaction, err error) {
 	} else {
 		method.Signature = ""
 	}
-	tx = types.Transaction{
+	tx = &types.Transaction{
 		TxHash:    t.TxHash,
 		EthTxHash: t.EthTxHash,
 		Sender:    types.NewAddress(t.Sender),

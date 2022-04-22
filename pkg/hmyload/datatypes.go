@@ -2,12 +2,9 @@ package hmyload
 
 import (
 	"encoding/json"
-	"github.com/go-errors/errors"
+	"github.com/mjmar01/harmolytics/pkg/cache"
 	"github.com/mjmar01/harmolytics/pkg/rpc"
 	"github.com/mjmar01/harmolytics/pkg/types"
-	"github.com/syndtr/goleveldb/leveldb"
-	"os"
-	"sync"
 	"time"
 )
 
@@ -15,47 +12,36 @@ import (
 
 // Loader struct used to load blockchain data
 type Loader struct {
-	defaultConn     *rpc.Rpc
-	optionalConns   []*rpc.Rpc
+	defaultConn     *rpc.RPC
+	optionalConns   []*rpc.RPC
 	connCount       int
 	uniqueConnCount int
-	connByPeer      map[string][]*rpc.Rpc
-	uniqueConns     []*rpc.Rpc
-	cache           *leveldb.DB
-	cachePath       string
+	connByPeer      map[string][]*rpc.RPC
+	uniqueConns     []*rpc.RPC
+	cache           *cache.Cache
+	sharedCache     bool
 }
-
-var openCachesInit sync.Once
-var openCaches map[string]*leveldb.DB
-var openCacheTracker map[string]int
-var openCacheLock sync.Mutex
 
 // Opts contains optional parameters for the NewLoader function
 type Opts struct {
+	// Loader settings
 	AdditionalConnections int
-	RpcTimeout            time.Duration
-	CacheDir              string
+	// RPC settings
+	RpcTimeout time.Duration
+	// Cache settings
+	CacheDir                 string
+	ExistingCache            *cache.Cache
+	PreLoadCacheTransactions bool
 }
 
-func (o *Opts) defaults() (out *Opts, err error) {
-	if o != nil {
-		out = o
-	} else {
+func defaults(in *Opts) (out *Opts) {
+	if in == nil {
 		out = new(Opts)
+	} else {
+		out = in
 	}
 	if out.AdditionalConnections == 0 {
 		out.AdditionalConnections = 1
-	}
-	if out.RpcTimeout == 0 {
-		out.RpcTimeout = time.Minute * 2
-	}
-	if out.CacheDir == "" {
-		var dir string
-		dir, err = os.UserCacheDir()
-		if err != nil {
-			return nil, errors.Wrap(err, 0)
-		}
-		out.CacheDir = dir + "/harmony-tk"
 	}
 	return
 }
