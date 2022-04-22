@@ -60,6 +60,7 @@ func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transa
 	}
 	// Split into pages to avoid node stress
 	txs = make([]types.Transaction, len(hashes))
+	uniqueMethods := map[string]bool{}
 	for i := 0; i < len(hashes); i += 5000 {
 		size := int(math.Min(float64(len(hashes)-i), 5000))
 		txsPart, err := l.GetFullTransactions(hashes[i : i+size]...)
@@ -68,7 +69,25 @@ func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transa
 		}
 		for j, tx := range txsPart {
 			txs[i+j] = tx
+			if tx.Method.Signature != "" {
+				uniqueMethods[tx.Method.Signature] = true
+			}
 		}
+	}
+	for sig := range uniqueMethods {
+		_, ok := l.cache.GetMethod(sig)
+		if !ok {
+			m, err := l.GetMethod(sig)
+			if err != nil {
+				return nil, err
+			}
+			m.Signature = sig
+			l.cache.SetMethod(&m)
+		}
+	}
+	for _, tx := range txs {
+		m, _ := l.cache.GetMethod(tx.Method.Signature)
+		tx.Method = *m
 	}
 	return
 }
@@ -118,7 +137,10 @@ func (l *Loader) GetFullTransactions(hashes ...string) (txs []types.Transaction,
 					ch <- goTx{err: err}
 					return
 				}
-				//TODO Get method information with caching
+				m, ok := l.cache.GetMethod(tx.Method.Signature)
+				if ok {
+					tx.Method = *m
+				}
 				ch <- goTx{
 					err: nil,
 					tx:  tx,

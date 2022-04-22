@@ -14,7 +14,7 @@ var mMutex = sync.RWMutex{}
 func (c *Cache) GetMethod(sig string) (m *types.Method, ok bool) {
 	mMutex.RLock()
 	m, ok = mMemory[sig]
-	txMutex.RUnlock()
+	mMutex.RUnlock()
 	if ok {
 		return
 	}
