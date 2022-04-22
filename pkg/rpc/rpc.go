@@ -35,8 +35,8 @@ func NewRPC(url string, opts *Opts) (r *RPC, err error) {
 	return
 }
 
-// NewRpcs is used to generated multiple RPC structs using go routines
-func NewRpcs(url string, count int, opts *Opts) (rs []*RPC, err error) {
+// NewRPCs is used to generated multiple RPC structs using go routines
+func NewRPCs(url string, count int, opts *Opts) (rs []*RPC, err error) {
 	rs, ch := make([]*RPC, count), make(chan goRpcs, count)
 	for i := 0; i < count; i++ {
 		go func() {

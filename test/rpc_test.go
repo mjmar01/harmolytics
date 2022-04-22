@@ -28,13 +28,13 @@ func TestNewRpc(t *testing.T) {
 		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
 	r.Close()
-	rs, err := rpc.NewRpcs(url, 2, nil)
+	rs, err := rpc.NewRPCs(url, 2, nil)
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
 	rs[0].Close()
 	rs[1].Close()
-	rs, err = rpc.NewRpcs(url, 2, &rpc.Opts{Timeout: time.Minute * 3})
+	rs, err = rpc.NewRPCs(url, 2, &rpc.Opts{Timeout: time.Minute * 3})
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
@@ -141,7 +141,7 @@ func TestRawBatchCall(t *testing.T) {
 
 func TestBatches(t *testing.T) {
 	t.Parallel()
-	rs, err := rpc.NewRpcs(url, 10, nil)
+	rs, err := rpc.NewRPCs(url, 10, nil)
 	defer func() {
 		for _, r := range rs {
 			r.Close()
