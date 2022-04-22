@@ -21,10 +21,9 @@ func NewLoader(url string, opts *Opts) (l *Loader, err error) {
 
 	// Open cache
 	if opts.ExistingCache != nil {
-		l.sharedCache = true
 		l.cache = opts.ExistingCache
+		l.cache.Request()
 	} else {
-		l.sharedCache = false
 		l.cache, err = cache.NewCache(&cache.Opts{
 			CacheDir:            opts.CacheDir,
 			PreLoadTransactions: opts.PreLoadCacheTransactions,
@@ -51,7 +50,5 @@ func (l *Loader) Close() {
 	for _, conn := range l.optionalConns {
 		conn.Close()
 	}
-	if !l.sharedCache {
-		l.cache.Close()
-	}
+	l.cache.Done()
 }

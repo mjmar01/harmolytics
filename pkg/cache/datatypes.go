@@ -4,6 +4,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 var txPrefix = []byte{0x01}
@@ -11,7 +12,9 @@ var txPrefix = []byte{0x01}
 //<editor-fold desc="External types">
 
 type Cache struct {
-	levelDB *leveldb.DB
+	levelDB    *leveldb.DB
+	closeLock  int
+	closeMutex sync.Mutex
 }
 
 type Opts struct {

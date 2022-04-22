@@ -13,6 +13,7 @@ func NewCache(opts *Opts) (newCache *Cache, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
+	newCache.closeLock = 0
 
 	if opts.PreLoadTransactions {
 		newCache.loadTxMemory()
@@ -20,6 +21,20 @@ func NewCache(opts *Opts) (newCache *Cache, err error) {
 	return
 }
 
+func (c *Cache) Request() {
+	c.closeMutex.Lock()
+	c.closeLock++
+	c.closeMutex.Unlock()
+}
+
+func (c *Cache) Done() {
+	c.closeMutex.Lock()
+	c.closeLock++
+	c.closeMutex.Unlock()
+}
+
 func (c *Cache) Close() {
-	c.levelDB.Close()
+	if c.closeLock == 0 {
+		c.levelDB.Close()
+	}
 }
