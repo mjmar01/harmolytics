@@ -13,51 +13,51 @@ func EncodeTransaction(tx *types.Transaction) (data []byte, err error) {
 	hash, _ := hex.DecodeString(strings.TrimPrefix(tx.TxHash, "0x"))
 	ethHash, _ := hex.DecodeString(strings.TrimPrefix(tx.EthTxHash, "0x"))
 	input, _ := hex.DecodeString(strings.TrimPrefix(tx.Input, "0x"))
-	logs := make([]Log, len(tx.Logs))
-	for i, log := range tx.Logs {
+	logs := make([]log, len(tx.Logs))
+	for i, l := range tx.Logs {
 		var topics []byte
-		for _, topic := range log.Topics {
+		for _, topic := range l.Topics {
 			topicBytes, _ := hex.DecodeString(strings.TrimPrefix(topic, "0x"))
 			topics = append(topics, topicBytes...)
 		}
-		logData, _ := hex.DecodeString(strings.TrimPrefix(log.Data, "0x"))
-		logs[i] = Log{
-			Index: uint16(log.LogIndex),
-			Address: Addr{
-				One: log.Address.OneAddress,
-				Hex: log.Address.HexAddress,
+		logData, _ := hex.DecodeString(strings.TrimPrefix(l.Data, "0x"))
+		logs[i] = log{
+			index: uint16(l.LogIndex),
+			address: addr{
+				one: l.Address.OneAddress,
+				hex: l.Address.HexAddress,
 			},
-			Topics: topics,
-			Data:   logData,
+			topics: topics,
+			data:   logData,
 		}
 	}
 
-	bTx := Transaction{
-		Hash:    hash,
-		EthHash: ethHash,
-		Sender: Addr{
-			One: tx.Sender.OneAddress,
-			Hex: tx.Sender.HexAddress,
+	bTx := transaction{
+		hash:    hash,
+		ethHash: ethHash,
+		sender: addr{
+			one: tx.Sender.OneAddress,
+			hex: tx.Sender.HexAddress,
 		},
-		Receiver: Addr{
-			One: tx.Receiver.OneAddress,
-			Hex: tx.Receiver.HexAddress,
+		receiver: addr{
+			one: tx.Receiver.OneAddress,
+			hex: tx.Receiver.HexAddress,
 		},
-		BlockNum:  uint32(tx.BlockNum),
-		TimeStamp: tx.Timestamp,
-		Amount:    tx.Value.Bytes(),
-		Input:     input,
-		Method: Method{
-			Signature: tx.Method.Signature,
-			Name:      tx.Method.Name,
-			Params:    tx.Method.Parameters,
+		blockNum:  uint32(tx.BlockNum),
+		timeStamp: tx.Timestamp,
+		amount:    tx.Value.Bytes(),
+		input:     input,
+		method: method{
+			signature: tx.Method.Signature,
+			name:      tx.Method.Name,
+			params:    tx.Method.Parameters,
 		},
-		Logs:      logs,
-		Status:    byte(tx.Status),
-		GasAmount: tx.GasAmount,
-		GasPrice:  tx.GasPrice.Bytes(),
-		Shard:     byte(tx.ShardID),
-		ToShard:   byte(tx.ToShardID),
+		logs:      logs,
+		status:    byte(tx.Status),
+		gasAmount: tx.GasAmount,
+		gasPrice:  tx.GasPrice.Bytes(),
+		shard:     byte(tx.ShardID),
+		toShard:   byte(tx.ToShardID),
 	}
 	var buff bytes.Buffer
 	err = bTx.EncodeBebop(&buff)
@@ -69,40 +69,40 @@ func EncodeTransaction(tx *types.Transaction) (data []byte, err error) {
 }
 
 func DecodeTransaction(data []byte) (tx *types.Transaction, err error) {
-	bTx := Transaction{}
+	bTx := transaction{}
 	err = bTx.DecodeBebop(bytes.NewReader(data))
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
 
-	hash := "0x" + hex.EncodeToString(bTx.Hash)
-	ethHash := "0x" + hex.EncodeToString(bTx.EthHash)
-	input := "0x" + hex.EncodeToString(bTx.Input)
+	hash := "0x" + hex.EncodeToString(bTx.hash)
+	ethHash := "0x" + hex.EncodeToString(bTx.ethHash)
+	input := "0x" + hex.EncodeToString(bTx.input)
 
 	sender := types.Address{
-		OneAddress: bTx.Sender.One,
-		HexAddress: bTx.Sender.Hex,
+		OneAddress: bTx.sender.one,
+		HexAddress: bTx.sender.hex,
 	}
 	receiver := types.Address{
-		OneAddress: bTx.Receiver.One,
-		HexAddress: bTx.Receiver.Hex,
+		OneAddress: bTx.receiver.one,
+		HexAddress: bTx.receiver.hex,
 	}
 
-	logs := make([]types.TransactionLog, len(bTx.Logs))
-	for i, log := range bTx.Logs {
-		addr := types.Address{
-			OneAddress: log.Address.One,
-			HexAddress: log.Address.Hex,
+	logs := make([]types.TransactionLog, len(bTx.logs))
+	for i, l := range bTx.logs {
+		a := types.Address{
+			OneAddress: l.address.one,
+			HexAddress: l.address.hex,
 		}
-		logData := "0x" + hex.EncodeToString(log.Data)
-		var topics []string
-		for i := 32; i < len(log.Topics); i += 32 {
-			topics = append(topics, "0x"+hex.EncodeToString(log.Topics[i-32:i-1]))
+		logData := "0x" + hex.EncodeToString(l.data)
+		topics := make([]string, len(l.topics)/32)
+		for i := 32; i <= len(l.topics); i += 32 {
+			topics[(i/32)-1] = "0x" + hex.EncodeToString(l.topics[i-32:i])
 		}
 		logs[i] = types.TransactionLog{
 			TxHash:   hash,
-			LogIndex: int(log.Index),
-			Address:  addr,
+			LogIndex: int(l.index),
+			Address:  a,
 			Topics:   topics,
 			Data:     logData,
 		}
@@ -113,30 +113,30 @@ func DecodeTransaction(data []byte) (tx *types.Transaction, err error) {
 		EthTxHash: ethHash,
 		Sender:    sender,
 		Receiver:  receiver,
-		BlockNum:  uint64(bTx.BlockNum),
-		Timestamp: bTx.TimeStamp,
-		Value:     new(big.Int).SetBytes(bTx.Amount),
+		BlockNum:  uint64(bTx.blockNum),
+		Timestamp: bTx.timeStamp,
+		Value:     new(big.Int).SetBytes(bTx.amount),
 		Method: types.Method{
-			Signature:  bTx.Method.Signature,
-			Name:       bTx.Method.Name,
-			Parameters: bTx.Method.Params,
+			Signature:  bTx.method.signature,
+			Name:       bTx.method.name,
+			Parameters: bTx.method.params,
 		},
 		Input:     input,
 		Logs:      logs,
-		Status:    int(bTx.Status),
-		GasAmount: bTx.GasAmount,
-		GasPrice:  new(big.Int).SetBytes(bTx.GasPrice),
-		ShardID:   uint(bTx.Shard),
-		ToShardID: uint(bTx.ToShard),
+		Status:    int(bTx.status),
+		GasAmount: bTx.gasAmount,
+		GasPrice:  new(big.Int).SetBytes(bTx.gasPrice),
+		ShardID:   uint(bTx.shard),
+		ToShardID: uint(bTx.toShard),
 	}
 	return
 }
 
 func EncodeMethod(m *types.Method) (data []byte, err error) {
-	bM := Method{
-		Signature: m.Signature,
-		Name:      m.Name,
-		Params:    m.Parameters,
+	bM := method{
+		signature: m.Signature,
+		name:      m.Name,
+		params:    m.Parameters,
 	}
 	var buff bytes.Buffer
 	err = bM.EncodeBebop(&buff)
@@ -148,15 +148,15 @@ func EncodeMethod(m *types.Method) (data []byte, err error) {
 }
 
 func DecodeMethod(data []byte) (m *types.Method, err error) {
-	bM := Method{}
+	bM := method{}
 	err = bM.DecodeBebop(bytes.NewReader(data))
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
 	m = &types.Method{
-		Signature:  bM.Signature,
-		Name:       bM.Name,
-		Parameters: bM.Params,
+		Signature:  bM.signature,
+		Name:       bM.name,
+		Parameters: bM.params,
 	}
 	return
 }
