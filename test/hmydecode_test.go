@@ -13,7 +13,7 @@ const (
 
 func TestDecodeSwap(t *testing.T) {
 	t.Parallel()
-	ldr, err := hmyload.NewLoader(url, nil)
+	ldr, err := hmyload.NewLoader(url, &hmyload.Opts{ExistingCache: centralCache})
 	defer ldr.Close()
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
@@ -44,7 +44,7 @@ func TestDecodeSwap(t *testing.T) {
 
 func TestDecodeTokenTransfers(t *testing.T) {
 	t.Parallel()
-	ldr, err := hmyload.NewLoader(url, nil)
+	ldr, err := hmyload.NewLoader(url, &hmyload.Opts{ExistingCache: centralCache})
 	defer ldr.Close()
 	if err != nil {
 		t.Error(err.(*errors.Error).ErrorStack())
