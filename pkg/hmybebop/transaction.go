@@ -8,352 +8,352 @@ import (
 	"io"
 )
 
-var _ bebop.Record = &Transaction{}
+var _ bebop.Record = &transaction{}
 
-type Transaction struct {
-	Hash      []byte
-	EthHash   []byte
-	Sender    Addr
-	Receiver  Addr
-	BlockNum  uint32
-	TimeStamp uint64
-	Amount    []byte
-	Input     []byte
-	Method    Method
-	Logs      []Log
-	Status    byte
-	GasAmount uint32
-	GasPrice  []byte
-	Shard     byte
-	ToShard   byte
+type transaction struct {
+	hash      []byte
+	ethHash   []byte
+	sender    addr
+	receiver  addr
+	blockNum  uint32
+	timeStamp uint64
+	amount    []byte
+	input     []byte
+	method    method
+	logs      []log
+	status    byte
+	gasAmount uint32
+	gasPrice  []byte
+	shard     byte
+	toShard   byte
 }
 
-func (bbp Transaction) MarshalBebopTo(buf []byte) int {
+func (bbp transaction) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Hash)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.hash)))
 	at += 4
-	copy(buf[at:at+len(bbp.Hash)], bbp.Hash)
-	at += len(bbp.Hash)
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.EthHash)))
+	copy(buf[at:at+len(bbp.hash)], bbp.hash)
+	at += len(bbp.hash)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.ethHash)))
 	at += 4
-	copy(buf[at:at+len(bbp.EthHash)], bbp.EthHash)
-	at += len(bbp.EthHash)
-	(bbp.Sender).MarshalBebopTo(buf[at:])
-	at += (bbp.Sender).Size()
-	(bbp.Receiver).MarshalBebopTo(buf[at:])
-	at += (bbp.Receiver).Size()
-	iohelp.WriteUint32Bytes(buf[at:], bbp.BlockNum)
+	copy(buf[at:at+len(bbp.ethHash)], bbp.ethHash)
+	at += len(bbp.ethHash)
+	(bbp.sender).MarshalBebopTo(buf[at:])
+	at += (bbp.sender).Size()
+	(bbp.receiver).MarshalBebopTo(buf[at:])
+	at += (bbp.receiver).Size()
+	iohelp.WriteUint32Bytes(buf[at:], bbp.blockNum)
 	at += 4
-	iohelp.WriteUint64Bytes(buf[at:], bbp.TimeStamp)
+	iohelp.WriteUint64Bytes(buf[at:], bbp.timeStamp)
 	at += 8
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Amount)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.amount)))
 	at += 4
-	copy(buf[at:at+len(bbp.Amount)], bbp.Amount)
-	at += len(bbp.Amount)
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Input)))
+	copy(buf[at:at+len(bbp.amount)], bbp.amount)
+	at += len(bbp.amount)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.input)))
 	at += 4
-	copy(buf[at:at+len(bbp.Input)], bbp.Input)
-	at += len(bbp.Input)
-	(bbp.Method).MarshalBebopTo(buf[at:])
-	at += (bbp.Method).Size()
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Logs)))
+	copy(buf[at:at+len(bbp.input)], bbp.input)
+	at += len(bbp.input)
+	(bbp.method).MarshalBebopTo(buf[at:])
+	at += (bbp.method).Size()
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.logs)))
 	at += 4
-	for _, v1 := range bbp.Logs {
+	for _, v1 := range bbp.logs {
 		(v1).MarshalBebopTo(buf[at:])
 		at += (v1).Size()
 	}
-	iohelp.WriteByteBytes(buf[at:], bbp.Status)
+	iohelp.WriteByteBytes(buf[at:], bbp.status)
 	at += 1
-	iohelp.WriteUint32Bytes(buf[at:], bbp.GasAmount)
+	iohelp.WriteUint32Bytes(buf[at:], bbp.gasAmount)
 	at += 4
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.GasPrice)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.gasPrice)))
 	at += 4
-	copy(buf[at:at+len(bbp.GasPrice)], bbp.GasPrice)
-	at += len(bbp.GasPrice)
-	iohelp.WriteByteBytes(buf[at:], bbp.Shard)
+	copy(buf[at:at+len(bbp.gasPrice)], bbp.gasPrice)
+	at += len(bbp.gasPrice)
+	iohelp.WriteByteBytes(buf[at:], bbp.shard)
 	at += 1
-	iohelp.WriteByteBytes(buf[at:], bbp.ToShard)
+	iohelp.WriteByteBytes(buf[at:], bbp.toShard)
 	at += 1
 	return at
 }
 
-func (bbp *Transaction) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *transaction) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Hash = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.hash = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	if len(buf[at:]) < len(bbp.Hash)*1 {
+	if len(buf[at:]) < len(bbp.hash)*1 {
 		return io.ErrUnexpectedEOF
 	}
-	copy(bbp.Hash, buf[at:at+len(bbp.Hash)])
-	at += len(bbp.Hash)
+	copy(bbp.hash, buf[at:at+len(bbp.hash)])
+	at += len(bbp.hash)
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.EthHash = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.ethHash = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	if len(buf[at:]) < len(bbp.EthHash)*1 {
+	if len(buf[at:]) < len(bbp.ethHash)*1 {
 		return io.ErrUnexpectedEOF
 	}
-	copy(bbp.EthHash, buf[at:at+len(bbp.EthHash)])
-	at += len(bbp.EthHash)
-	bbp.Sender, err = MakeAddrFromBytes(buf[at:])
+	copy(bbp.ethHash, buf[at:at+len(bbp.ethHash)])
+	at += len(bbp.ethHash)
+	bbp.sender, err = makeaddrFromBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += (bbp.Sender).Size()
-	bbp.Receiver, err = MakeAddrFromBytes(buf[at:])
+	at += (bbp.sender).Size()
+	bbp.receiver, err = makeaddrFromBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += (bbp.Receiver).Size()
+	at += (bbp.receiver).Size()
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.BlockNum = iohelp.ReadUint32Bytes(buf[at:])
+	bbp.blockNum = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 8 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.TimeStamp = iohelp.ReadUint64Bytes(buf[at:])
+	bbp.timeStamp = iohelp.ReadUint64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Amount = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.amount = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	if len(buf[at:]) < len(bbp.Amount)*1 {
+	if len(buf[at:]) < len(bbp.amount)*1 {
 		return io.ErrUnexpectedEOF
 	}
-	copy(bbp.Amount, buf[at:at+len(bbp.Amount)])
-	at += len(bbp.Amount)
+	copy(bbp.amount, buf[at:at+len(bbp.amount)])
+	at += len(bbp.amount)
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Input = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.input = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	if len(buf[at:]) < len(bbp.Input)*1 {
+	if len(buf[at:]) < len(bbp.input)*1 {
 		return io.ErrUnexpectedEOF
 	}
-	copy(bbp.Input, buf[at:at+len(bbp.Input)])
-	at += len(bbp.Input)
-	bbp.Method, err = MakeMethodFromBytes(buf[at:])
+	copy(bbp.input, buf[at:at+len(bbp.input)])
+	at += len(bbp.input)
+	bbp.method, err = makemethodFromBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += (bbp.Method).Size()
+	at += (bbp.method).Size()
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Logs = make([]Log, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.logs = make([]log, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	for i1 := range bbp.Logs {
-		(bbp.Logs)[i1], err = MakeLogFromBytes(buf[at:])
+	for i1 := range bbp.logs {
+		(bbp.logs)[i1], err = makelogFromBytes(buf[at:])
 		if err != nil {
 			return err
 		}
-		at += ((bbp.Logs)[i1]).Size()
+		at += ((bbp.logs)[i1]).Size()
 	}
 	if len(buf[at:]) < 1 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Status = iohelp.ReadByteBytes(buf[at:])
+	bbp.status = iohelp.ReadByteBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.GasAmount = iohelp.ReadUint32Bytes(buf[at:])
+	bbp.gasAmount = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.GasPrice = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.gasPrice = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	if len(buf[at:]) < len(bbp.GasPrice)*1 {
+	if len(buf[at:]) < len(bbp.gasPrice)*1 {
 		return io.ErrUnexpectedEOF
 	}
-	copy(bbp.GasPrice, buf[at:at+len(bbp.GasPrice)])
-	at += len(bbp.GasPrice)
+	copy(bbp.gasPrice, buf[at:at+len(bbp.gasPrice)])
+	at += len(bbp.gasPrice)
 	if len(buf[at:]) < 1 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Shard = iohelp.ReadByteBytes(buf[at:])
+	bbp.shard = iohelp.ReadByteBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.ToShard = iohelp.ReadByteBytes(buf[at:])
+	bbp.toShard = iohelp.ReadByteBytes(buf[at:])
 	at += 1
 	return nil
 }
 
-func (bbp Transaction) EncodeBebop(iow io.Writer) (err error) {
+func (bbp transaction) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(len(bbp.Hash)))
-	for _, elem := range bbp.Hash {
+	iohelp.WriteUint32(w, uint32(len(bbp.hash)))
+	for _, elem := range bbp.hash {
 		iohelp.WriteByte(w, elem)
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.EthHash)))
-	for _, elem := range bbp.EthHash {
+	iohelp.WriteUint32(w, uint32(len(bbp.ethHash)))
+	for _, elem := range bbp.ethHash {
 		iohelp.WriteByte(w, elem)
 	}
-	err = (bbp.Sender).EncodeBebop(w)
+	err = (bbp.sender).EncodeBebop(w)
 	if err != nil {
 		return err
 	}
-	err = (bbp.Receiver).EncodeBebop(w)
+	err = (bbp.receiver).EncodeBebop(w)
 	if err != nil {
 		return err
 	}
-	iohelp.WriteUint32(w, bbp.BlockNum)
-	iohelp.WriteUint64(w, bbp.TimeStamp)
-	iohelp.WriteUint32(w, uint32(len(bbp.Amount)))
-	for _, elem := range bbp.Amount {
+	iohelp.WriteUint32(w, bbp.blockNum)
+	iohelp.WriteUint64(w, bbp.timeStamp)
+	iohelp.WriteUint32(w, uint32(len(bbp.amount)))
+	for _, elem := range bbp.amount {
 		iohelp.WriteByte(w, elem)
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.Input)))
-	for _, elem := range bbp.Input {
+	iohelp.WriteUint32(w, uint32(len(bbp.input)))
+	for _, elem := range bbp.input {
 		iohelp.WriteByte(w, elem)
 	}
-	err = (bbp.Method).EncodeBebop(w)
+	err = (bbp.method).EncodeBebop(w)
 	if err != nil {
 		return err
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.Logs)))
-	for _, elem := range bbp.Logs {
+	iohelp.WriteUint32(w, uint32(len(bbp.logs)))
+	for _, elem := range bbp.logs {
 		err = (elem).EncodeBebop(w)
 		if err != nil {
 			return err
 		}
 	}
-	iohelp.WriteByte(w, bbp.Status)
-	iohelp.WriteUint32(w, bbp.GasAmount)
-	iohelp.WriteUint32(w, uint32(len(bbp.GasPrice)))
-	for _, elem := range bbp.GasPrice {
+	iohelp.WriteByte(w, bbp.status)
+	iohelp.WriteUint32(w, bbp.gasAmount)
+	iohelp.WriteUint32(w, uint32(len(bbp.gasPrice)))
+	for _, elem := range bbp.gasPrice {
 		iohelp.WriteByte(w, elem)
 	}
-	iohelp.WriteByte(w, bbp.Shard)
-	iohelp.WriteByte(w, bbp.ToShard)
+	iohelp.WriteByte(w, bbp.shard)
+	iohelp.WriteByte(w, bbp.toShard)
 	return w.Err
 }
 
-func (bbp *Transaction) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *transaction) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	bbp.Hash = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.Hash {
-		(bbp.Hash[i1]) = iohelp.ReadByte(r)
+	bbp.hash = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.hash {
+		(bbp.hash[i1]) = iohelp.ReadByte(r)
 	}
-	bbp.EthHash = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.EthHash {
-		(bbp.EthHash[i1]) = iohelp.ReadByte(r)
+	bbp.ethHash = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.ethHash {
+		(bbp.ethHash[i1]) = iohelp.ReadByte(r)
 	}
-	(bbp.Sender), err = MakeAddr(r)
+	(bbp.sender), err = makeaddr(r)
 	if err != nil {
 		return err
 	}
-	(bbp.Receiver), err = MakeAddr(r)
+	(bbp.receiver), err = makeaddr(r)
 	if err != nil {
 		return err
 	}
-	bbp.BlockNum = iohelp.ReadUint32(r)
-	bbp.TimeStamp = iohelp.ReadUint64(r)
-	bbp.Amount = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.Amount {
-		(bbp.Amount[i1]) = iohelp.ReadByte(r)
+	bbp.blockNum = iohelp.ReadUint32(r)
+	bbp.timeStamp = iohelp.ReadUint64(r)
+	bbp.amount = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.amount {
+		(bbp.amount[i1]) = iohelp.ReadByte(r)
 	}
-	bbp.Input = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.Input {
-		(bbp.Input[i1]) = iohelp.ReadByte(r)
+	bbp.input = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.input {
+		(bbp.input[i1]) = iohelp.ReadByte(r)
 	}
-	(bbp.Method), err = MakeMethod(r)
+	(bbp.method), err = makemethod(r)
 	if err != nil {
 		return err
 	}
-	bbp.Logs = make([]Log, iohelp.ReadUint32(r))
-	for i1 := range bbp.Logs {
-		(bbp.Logs[i1]), err = MakeLog(r)
+	bbp.logs = make([]log, iohelp.ReadUint32(r))
+	for i1 := range bbp.logs {
+		(bbp.logs[i1]), err = makelog(r)
 		if err != nil {
 			return err
 		}
 	}
-	bbp.Status = iohelp.ReadByte(r)
-	bbp.GasAmount = iohelp.ReadUint32(r)
-	bbp.GasPrice = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.GasPrice {
-		(bbp.GasPrice[i1]) = iohelp.ReadByte(r)
+	bbp.status = iohelp.ReadByte(r)
+	bbp.gasAmount = iohelp.ReadUint32(r)
+	bbp.gasPrice = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.gasPrice {
+		(bbp.gasPrice[i1]) = iohelp.ReadByte(r)
 	}
-	bbp.Shard = iohelp.ReadByte(r)
-	bbp.ToShard = iohelp.ReadByte(r)
+	bbp.shard = iohelp.ReadByte(r)
+	bbp.toShard = iohelp.ReadByte(r)
 	return r.Err
 }
 
-func (bbp Transaction) Size() int {
+func (bbp transaction) Size() int {
 	bodyLen := 0
 	bodyLen += 4
-	bodyLen += len(bbp.Hash) * 1
+	bodyLen += len(bbp.hash) * 1
 	bodyLen += 4
-	bodyLen += len(bbp.EthHash) * 1
-	bodyLen += (bbp.Sender).Size()
-	bodyLen += (bbp.Receiver).Size()
+	bodyLen += len(bbp.ethHash) * 1
+	bodyLen += (bbp.sender).Size()
+	bodyLen += (bbp.receiver).Size()
 	bodyLen += 4
 	bodyLen += 8
 	bodyLen += 4
-	bodyLen += len(bbp.Amount) * 1
+	bodyLen += len(bbp.amount) * 1
 	bodyLen += 4
-	bodyLen += len(bbp.Input) * 1
-	bodyLen += (bbp.Method).Size()
+	bodyLen += len(bbp.input) * 1
+	bodyLen += (bbp.method).Size()
 	bodyLen += 4
-	for _, elem := range bbp.Logs {
+	for _, elem := range bbp.logs {
 		bodyLen += (elem).Size()
 	}
 	bodyLen += 1
 	bodyLen += 4
 	bodyLen += 4
-	bodyLen += len(bbp.GasPrice) * 1
+	bodyLen += len(bbp.gasPrice) * 1
 	bodyLen += 1
 	bodyLen += 1
 	return bodyLen
 }
 
-func (bbp Transaction) MarshalBebop() []byte {
+func (bbp transaction) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func MakeTransaction(r iohelp.ErrorReader) (Transaction, error) {
-	v := Transaction{}
+func maketransaction(r iohelp.ErrorReader) (transaction, error) {
+	v := transaction{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func MakeTransactionFromBytes(buf []byte) (Transaction, error) {
-	v := Transaction{}
+func maketransactionFromBytes(buf []byte) (transaction, error) {
+	v := transaction{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-var _ bebop.Record = &Method{}
+var _ bebop.Record = &method{}
 
-type Method struct {
-	Signature string
-	Name      string
-	Params    []string
+type method struct {
+	signature string
+	name      string
+	params    []string
 }
 
-func (bbp Method) MarshalBebopTo(buf []byte) int {
+func (bbp method) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Signature)))
-	copy(buf[at+4:at+4+len(bbp.Signature)], []byte(bbp.Signature))
-	at += 4 + len(bbp.Signature)
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Name)))
-	copy(buf[at+4:at+4+len(bbp.Name)], []byte(bbp.Name))
-	at += 4 + len(bbp.Name)
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Params)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.signature)))
+	copy(buf[at+4:at+4+len(bbp.signature)], []byte(bbp.signature))
+	at += 4 + len(bbp.signature)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.name)))
+	copy(buf[at+4:at+4+len(bbp.name)], []byte(bbp.name))
+	at += 4 + len(bbp.name)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.params)))
 	at += 4
-	for _, v1 := range bbp.Params {
+	for _, v1 := range bbp.params {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
 		copy(buf[at+4:at+4+len(v1)], []byte(v1))
 		at += 4 + len(v1)
@@ -361,283 +361,283 @@ func (bbp Method) MarshalBebopTo(buf []byte) int {
 	return at
 }
 
-func (bbp *Method) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *method) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	bbp.Signature, err = iohelp.ReadStringBytes(buf[at:])
+	bbp.signature, err = iohelp.ReadStringBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += 4 + len(bbp.Signature)
-	bbp.Name, err = iohelp.ReadStringBytes(buf[at:])
+	at += 4 + len(bbp.signature)
+	bbp.name, err = iohelp.ReadStringBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += 4 + len(bbp.Name)
+	at += 4 + len(bbp.name)
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Params = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.params = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	for i1 := range bbp.Params {
-		(bbp.Params)[i1], err = iohelp.ReadStringBytes(buf[at:])
+	for i1 := range bbp.params {
+		(bbp.params)[i1], err = iohelp.ReadStringBytes(buf[at:])
 		if err != nil {
 			return err
 		}
-		at += 4 + len((bbp.Params)[i1])
+		at += 4 + len((bbp.params)[i1])
 	}
 	return nil
 }
 
-func (bbp Method) EncodeBebop(iow io.Writer) (err error) {
+func (bbp method) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(len(bbp.Signature)))
-	w.Write([]byte(bbp.Signature))
-	iohelp.WriteUint32(w, uint32(len(bbp.Name)))
-	w.Write([]byte(bbp.Name))
-	iohelp.WriteUint32(w, uint32(len(bbp.Params)))
-	for _, elem := range bbp.Params {
+	iohelp.WriteUint32(w, uint32(len(bbp.signature)))
+	w.Write([]byte(bbp.signature))
+	iohelp.WriteUint32(w, uint32(len(bbp.name)))
+	w.Write([]byte(bbp.name))
+	iohelp.WriteUint32(w, uint32(len(bbp.params)))
+	for _, elem := range bbp.params {
 		iohelp.WriteUint32(w, uint32(len(elem)))
 		w.Write([]byte(elem))
 	}
 	return w.Err
 }
 
-func (bbp *Method) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *method) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	bbp.Signature = iohelp.ReadString(r)
-	bbp.Name = iohelp.ReadString(r)
-	bbp.Params = make([]string, iohelp.ReadUint32(r))
-	for i1 := range bbp.Params {
-		(bbp.Params[i1]) = iohelp.ReadString(r)
+	bbp.signature = iohelp.ReadString(r)
+	bbp.name = iohelp.ReadString(r)
+	bbp.params = make([]string, iohelp.ReadUint32(r))
+	for i1 := range bbp.params {
+		(bbp.params[i1]) = iohelp.ReadString(r)
 	}
 	return r.Err
 }
 
-func (bbp Method) Size() int {
+func (bbp method) Size() int {
 	bodyLen := 0
-	bodyLen += 4 + len(bbp.Signature)
-	bodyLen += 4 + len(bbp.Name)
+	bodyLen += 4 + len(bbp.signature)
+	bodyLen += 4 + len(bbp.name)
 	bodyLen += 4
-	for _, elem := range bbp.Params {
+	for _, elem := range bbp.params {
 		bodyLen += 4 + len(elem)
 	}
 	return bodyLen
 }
 
-func (bbp Method) MarshalBebop() []byte {
+func (bbp method) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func MakeMethod(r iohelp.ErrorReader) (Method, error) {
-	v := Method{}
+func makemethod(r iohelp.ErrorReader) (method, error) {
+	v := method{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func MakeMethodFromBytes(buf []byte) (Method, error) {
-	v := Method{}
+func makemethodFromBytes(buf []byte) (method, error) {
+	v := method{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-var _ bebop.Record = &Addr{}
+var _ bebop.Record = &addr{}
 
-type Addr struct {
-	One string
-	Hex string
+type addr struct {
+	one string
+	hex string
 }
 
-func (bbp Addr) MarshalBebopTo(buf []byte) int {
+func (bbp addr) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.One)))
-	copy(buf[at+4:at+4+len(bbp.One)], []byte(bbp.One))
-	at += 4 + len(bbp.One)
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Hex)))
-	copy(buf[at+4:at+4+len(bbp.Hex)], []byte(bbp.Hex))
-	at += 4 + len(bbp.Hex)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.one)))
+	copy(buf[at+4:at+4+len(bbp.one)], []byte(bbp.one))
+	at += 4 + len(bbp.one)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.hex)))
+	copy(buf[at+4:at+4+len(bbp.hex)], []byte(bbp.hex))
+	at += 4 + len(bbp.hex)
 	return at
 }
 
-func (bbp *Addr) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *addr) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	bbp.One, err = iohelp.ReadStringBytes(buf[at:])
+	bbp.one, err = iohelp.ReadStringBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += 4 + len(bbp.One)
-	bbp.Hex, err = iohelp.ReadStringBytes(buf[at:])
+	at += 4 + len(bbp.one)
+	bbp.hex, err = iohelp.ReadStringBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += 4 + len(bbp.Hex)
+	at += 4 + len(bbp.hex)
 	return nil
 }
 
-func (bbp Addr) EncodeBebop(iow io.Writer) (err error) {
+func (bbp addr) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(len(bbp.One)))
-	w.Write([]byte(bbp.One))
-	iohelp.WriteUint32(w, uint32(len(bbp.Hex)))
-	w.Write([]byte(bbp.Hex))
+	iohelp.WriteUint32(w, uint32(len(bbp.one)))
+	w.Write([]byte(bbp.one))
+	iohelp.WriteUint32(w, uint32(len(bbp.hex)))
+	w.Write([]byte(bbp.hex))
 	return w.Err
 }
 
-func (bbp *Addr) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *addr) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	bbp.One = iohelp.ReadString(r)
-	bbp.Hex = iohelp.ReadString(r)
+	bbp.one = iohelp.ReadString(r)
+	bbp.hex = iohelp.ReadString(r)
 	return r.Err
 }
 
-func (bbp Addr) Size() int {
+func (bbp addr) Size() int {
 	bodyLen := 0
-	bodyLen += 4 + len(bbp.One)
-	bodyLen += 4 + len(bbp.Hex)
+	bodyLen += 4 + len(bbp.one)
+	bodyLen += 4 + len(bbp.hex)
 	return bodyLen
 }
 
-func (bbp Addr) MarshalBebop() []byte {
+func (bbp addr) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func MakeAddr(r iohelp.ErrorReader) (Addr, error) {
-	v := Addr{}
+func makeaddr(r iohelp.ErrorReader) (addr, error) {
+	v := addr{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func MakeAddrFromBytes(buf []byte) (Addr, error) {
-	v := Addr{}
+func makeaddrFromBytes(buf []byte) (addr, error) {
+	v := addr{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-var _ bebop.Record = &Log{}
+var _ bebop.Record = &log{}
 
-type Log struct {
-	Index   uint16
-	Address Addr
-	Topics  []byte
-	Data    []byte
+type log struct {
+	index   uint16
+	address addr
+	topics  []byte
+	data    []byte
 }
 
-func (bbp Log) MarshalBebopTo(buf []byte) int {
+func (bbp log) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint16Bytes(buf[at:], bbp.Index)
+	iohelp.WriteUint16Bytes(buf[at:], bbp.index)
 	at += 2
-	(bbp.Address).MarshalBebopTo(buf[at:])
-	at += (bbp.Address).Size()
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Topics)))
+	(bbp.address).MarshalBebopTo(buf[at:])
+	at += (bbp.address).Size()
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.topics)))
 	at += 4
-	copy(buf[at:at+len(bbp.Topics)], bbp.Topics)
-	at += len(bbp.Topics)
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Data)))
+	copy(buf[at:at+len(bbp.topics)], bbp.topics)
+	at += len(bbp.topics)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.data)))
 	at += 4
-	copy(buf[at:at+len(bbp.Data)], bbp.Data)
-	at += len(bbp.Data)
+	copy(buf[at:at+len(bbp.data)], bbp.data)
+	at += len(bbp.data)
 	return at
 }
 
-func (bbp *Log) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *log) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 2 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Index = iohelp.ReadUint16Bytes(buf[at:])
+	bbp.index = iohelp.ReadUint16Bytes(buf[at:])
 	at += 2
-	bbp.Address, err = MakeAddrFromBytes(buf[at:])
+	bbp.address, err = makeaddrFromBytes(buf[at:])
 	if err != nil {
 		return err
 	}
-	at += (bbp.Address).Size()
+	at += (bbp.address).Size()
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Topics = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.topics = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	if len(buf[at:]) < len(bbp.Topics)*1 {
+	if len(buf[at:]) < len(bbp.topics)*1 {
 		return io.ErrUnexpectedEOF
 	}
-	copy(bbp.Topics, buf[at:at+len(bbp.Topics)])
-	at += len(bbp.Topics)
+	copy(bbp.topics, buf[at:at+len(bbp.topics)])
+	at += len(bbp.topics)
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.Data = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.data = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	if len(buf[at:]) < len(bbp.Data)*1 {
+	if len(buf[at:]) < len(bbp.data)*1 {
 		return io.ErrUnexpectedEOF
 	}
-	copy(bbp.Data, buf[at:at+len(bbp.Data)])
-	at += len(bbp.Data)
+	copy(bbp.data, buf[at:at+len(bbp.data)])
+	at += len(bbp.data)
 	return nil
 }
 
-func (bbp Log) EncodeBebop(iow io.Writer) (err error) {
+func (bbp log) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint16(w, bbp.Index)
-	err = (bbp.Address).EncodeBebop(w)
+	iohelp.WriteUint16(w, bbp.index)
+	err = (bbp.address).EncodeBebop(w)
 	if err != nil {
 		return err
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.Topics)))
-	for _, elem := range bbp.Topics {
+	iohelp.WriteUint32(w, uint32(len(bbp.topics)))
+	for _, elem := range bbp.topics {
 		iohelp.WriteByte(w, elem)
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.Data)))
-	for _, elem := range bbp.Data {
+	iohelp.WriteUint32(w, uint32(len(bbp.data)))
+	for _, elem := range bbp.data {
 		iohelp.WriteByte(w, elem)
 	}
 	return w.Err
 }
 
-func (bbp *Log) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *log) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	bbp.Index = iohelp.ReadUint16(r)
-	(bbp.Address), err = MakeAddr(r)
+	bbp.index = iohelp.ReadUint16(r)
+	(bbp.address), err = makeaddr(r)
 	if err != nil {
 		return err
 	}
-	bbp.Topics = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.Topics {
-		(bbp.Topics[i1]) = iohelp.ReadByte(r)
+	bbp.topics = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.topics {
+		(bbp.topics[i1]) = iohelp.ReadByte(r)
 	}
-	bbp.Data = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.Data {
-		(bbp.Data[i1]) = iohelp.ReadByte(r)
+	bbp.data = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.data {
+		(bbp.data[i1]) = iohelp.ReadByte(r)
 	}
 	return r.Err
 }
 
-func (bbp Log) Size() int {
+func (bbp log) Size() int {
 	bodyLen := 0
 	bodyLen += 2
-	bodyLen += (bbp.Address).Size()
+	bodyLen += (bbp.address).Size()
 	bodyLen += 4
-	bodyLen += len(bbp.Topics) * 1
+	bodyLen += len(bbp.topics) * 1
 	bodyLen += 4
-	bodyLen += len(bbp.Data) * 1
+	bodyLen += len(bbp.data) * 1
 	return bodyLen
 }
 
-func (bbp Log) MarshalBebop() []byte {
+func (bbp log) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func MakeLog(r iohelp.ErrorReader) (Log, error) {
-	v := Log{}
+func makelog(r iohelp.ErrorReader) (log, error) {
+	v := log{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func MakeLogFromBytes(buf []byte) (Log, error) {
-	v := Log{}
+func makelogFromBytes(buf []byte) (log, error) {
+	v := log{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
