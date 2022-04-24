@@ -11,6 +11,7 @@ var txPrefix = []byte{0x01}
 var txMemoryByEthHash = map[string]*types.Transaction{}
 var txMemoryByHash = map[string]*types.Transaction{}
 var txMutex = sync.RWMutex{}
+var loadedTx = false
 
 func (c *Cache) GetTransaction(hash string) (tx *types.Transaction, ok bool) {
 	txMutex.RLock()
@@ -35,6 +36,19 @@ func (c *Cache) GetTransaction(hash string) (tx *types.Transaction, ok bool) {
 	txMemoryByHash[tx.TxHash] = tx
 	txMutex.Unlock()
 	return tx, true
+}
+
+func (c *Cache) GetTransactionByFilter(include func(m *types.Transaction) bool) (txs []*types.Transaction) {
+	if !loadedTx {
+		c.loadMMemory()
+	}
+	for _, tx := range txMemoryByHash {
+		in := include(tx)
+		if in {
+			txs = append(txs, tx)
+		}
+	}
+	return
 }
 
 func (c *Cache) SetTransaction(tx *types.Transaction) {
@@ -67,6 +81,7 @@ func (c *Cache) loadTxMemory() {
 	}
 	wg.Wait()
 	iter.Release()
+	loadedTx = true
 }
 
 func transactionKey(hash string) []byte {

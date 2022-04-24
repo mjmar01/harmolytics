@@ -10,6 +10,7 @@ import (
 var mPrefix = []byte{0x02}
 var mMemory = map[string]*types.Method{}
 var mMutex = sync.RWMutex{}
+var loadedM = false
 
 func (c *Cache) GetMethod(sig string) (m *types.Method, ok bool) {
 	mMutex.RLock()
@@ -43,6 +44,19 @@ func (c *Cache) SetMethod(m *types.Method) {
 	c.levelDB.Put(methodKey(m.Signature), v, nil)
 }
 
+func (c *Cache) GetMethodsByFilter(include func(m *types.Method) bool) (methods []*types.Method) {
+	if !loadedM {
+		c.loadMMemory()
+	}
+	for _, method := range mMemory {
+		in := include(method)
+		if in {
+			methods = append(methods, method)
+		}
+	}
+	return
+}
+
 func (c *Cache) loadMMemory() {
 	iter := c.levelDB.NewIterator(util.BytesPrefix(mPrefix), nil)
 	wg := sync.WaitGroup{}
@@ -61,6 +75,7 @@ func (c *Cache) loadMMemory() {
 	}
 	wg.Wait()
 	iter.Release()
+	loadedM = true
 }
 
 func methodKey(sig string) []byte {
