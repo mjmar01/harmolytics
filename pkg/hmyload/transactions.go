@@ -86,8 +86,10 @@ func (l *Loader) GetTransactionsByWallet(addr types.Address) (txs []types.Transa
 		}
 	}
 	for _, tx := range txs {
-		m, _ := l.cache.GetMethod(tx.Method.Signature)
-		tx.Method = *m
+		m, ok := l.cache.GetMethod(tx.Method.Signature)
+		if ok {
+			tx.Method = *m
+		}
 	}
 	return
 }
@@ -183,7 +185,7 @@ func readTxInfoFromResponse(data []byte) (tx *types.Transaction, err error) {
 	gasPrice := new(big.Int)
 	gasPrice.SetString(t.GasPrice.String(), 10)
 	var method types.Method
-	if len(t.Input) > 10 {
+	if len(t.Input) >= 10 {
 		method.Signature = t.Input[2:10]
 	} else {
 		method.Signature = ""
