@@ -40,7 +40,7 @@ func (c *Cache) GetTransaction(hash string) (tx *types.Transaction, ok bool) {
 
 func (c *Cache) GetTransactionByFilter(include func(m *types.Transaction) bool) (txs []*types.Transaction) {
 	if !loadedTx {
-		c.loadMMemory()
+		c.loadTxMemory()
 	}
 	for _, tx := range txMemoryByHash {
 		in := include(tx)
