@@ -6,6 +6,7 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/cache"
 	"github.com/mjmar01/harmolytics/pkg/hmybebop"
+	"github.com/mjmar01/harmolytics/pkg/rpc"
 	"github.com/mjmar01/harmolytics/pkg/types"
 	"math/big"
 )
@@ -46,6 +47,7 @@ var tx = &types.Transaction{
 var txBebop, txGob []byte
 
 var centralCache *cache.Cache
+var defaultRPC *rpc.RPC
 
 var dump interface{}
 
@@ -59,7 +61,13 @@ func init() {
 
 	// Open central cache
 	var err error
-	centralCache, err = cache.NewCache(&cache.Opts{PreLoadTransactions: true})
+	centralCache, err = cache.NewCache(&cache.Opts{PreLoadTransactions: false})
+	if err != nil {
+		panic(err.(*errors.Error).ErrorStack())
+	}
+
+	// Open benchmark RPC
+	defaultRPC, err = rpc.NewRPC(url, nil)
 	if err != nil {
 		panic(err.(*errors.Error).ErrorStack())
 	}

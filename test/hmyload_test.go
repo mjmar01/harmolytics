@@ -1,10 +1,14 @@
 package test
 
 import (
+	"fmt"
 	"github.com/go-errors/errors"
 	"github.com/mjmar01/harmolytics/pkg/hmyload"
+	"github.com/mjmar01/harmolytics/pkg/rpc"
 	"github.com/mjmar01/harmolytics/pkg/types"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestGetHistory(t *testing.T) {
@@ -14,7 +18,7 @@ func TestGetHistory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
-	txs, err := l.GetTransactionsByWallet(types.NewAddress("one15vlc8yqstm9algcf6e94dxqx6y04jcsqjuc3gt"))
+	txs, err := l.GetTransactionsByWallet(types.NewAddress("0x42813a05ec9c7e17af2d1499f9b0a591b7619abf"))
 	if err != nil {
 		t.Fatal(err.(*errors.Error).ErrorStack())
 	}
@@ -78,4 +82,45 @@ func TestGetTokens(t *testing.T) {
 	if tks[0].Name != tks[2].Name {
 		t.Errorf("Result is in incorrect order")
 	}
+}
+
+func TestAltHistory(t *testing.T) {
+	t1 := time.Now()
+	var testBodies []rpc.Body
+	for i := 0; i < 80; i++ {
+		testBodies = append(testBodies, defaultRPC.NewBody(
+			"hmyv2_getTransactionsHistory",
+			map[string]interface{}{
+				"address":   "0x42813a05ec9c7e17af2d1499f9b0a591b7619abf",
+				"pageIndex": i,
+				"pageSize":  5000,
+				"fullTx":    false,
+				"txType":    "ALL",
+			},
+		))
+	}
+	fmt.Printf("Allocate bodies: %s\n", time.Since(t1))
+	t1 = time.Now()
+	ress, err := defaultRPC.BatchCall(testBodies)
+	fmt.Println(err)
+	sum := 0
+	for _, res := range ress {
+		sum += strings.Count(string(res), "\",\"")
+	}
+	fmt.Printf("Batch Call: %s\n", time.Since(t1))
+	testBodies = []rpc.Body{}
+	t1 = time.Now()
+	for i := 0; i < sum; i++ {
+		testBodies = append(testBodies, defaultRPC.NewBody("hmyv2_getTransactionReceipt", "0x771d2da16e07d81c63f2e7cf22418e5e98b5b57438de8005f5b144cfbe6867ba"))
+	}
+	fmt.Printf("Allocate bodies: %s\n", time.Since(t1))
+
+	t1 = time.Now()
+	for i := 0; i < 20000; i += 5000 {
+		ress, err = defaultRPC.RawBatchCall(testBodies[i : i+5000])
+		if err != nil {
+			panic(err)
+		}
+	}
+	fmt.Printf("Batch Call: %s\n", time.Since(t1))
 }
